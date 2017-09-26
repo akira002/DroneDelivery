@@ -1,8 +1,8 @@
-# Project: progettoDrone
+# Project: droneDelivery
 
 CPP  = g++
 CC   = gcc
-BIN  = progettoDrone
+BIN  = droneDelivery
 
 OBJ  = main.o drone.o
 LINKOBJ  = main.o drone.o
