@@ -4,8 +4,8 @@ CPP  = g++
 CC   = gcc
 BIN  = droneDelivery
 
-OBJ  = main.o drone.o
-LINKOBJ  = main.o drone.o
+OBJ  = main.o drone.o mesh.o
+LINKOBJ  = main.o drone.o mesh.o
 LIBS = -L/usr/X11R6 -lGL -lGLU -lSDL2 -lm
 INCS = -I. -I/usr/X11R6/include
 CXXINCS=#
@@ -28,3 +28,6 @@ main.o: main.cpp
 
 drone.o: drone.cpp
 	$(CPP) $(CDEB) -c drone.cpp -o drone.o $(CXXFLAGS)
+
+mesh.o: mesh.cpp
+	$(CPP) $(CDEB) -c mesh.cpp -o mesh.o $(CXXFLAGS)

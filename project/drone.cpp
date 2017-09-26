@@ -5,13 +5,20 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <vector>
 
 #include "drone.h"
+#include "point3.h"
+#include "mesh.h"
 
 #ifdef DEBUG
 #include <iostream>
 using namespace std;
 #endif
+
+// variabili globali di tipo mesh
+Mesh droneChassis((char *)"./objects/drone.obj");
+Mesh blade((char *)"./objects/blade.obj");
 
 // da invocare quando e' stato premuto/rilasciato il tasto numero "keycode"
 void Controller::EatKey(int keycode, int* keymap, bool pressed_or_released)
@@ -129,7 +136,7 @@ void Drone::Init(){
 }
 
 // disegna carlinga composta da 1 cubo traslato e scalato
-static void drawDronelinga(){
+static void drawDrone(){
 
   glColor3f(1,0,0);
 
@@ -173,53 +180,64 @@ static void drawDronelinga(){
 void Drone::Render() const{
   // sono nello spazio mondo
 
-  drawAxis(); // disegno assi spazio mondo
+  //drawAxis(); // disegno assi spazio mondo
   glPushMatrix();
 
   glTranslatef(px,py,pz);
   glRotatef(facing, 0,1,0);
 
   // sono nello spazio MACCHINA
-  drawAxis(); // disegno assi spazio macchina
+  //drawAxis(); // disegno assi spazio macchina
+  //Disegna drone con un parallelepipedo
+  //drawDrone();
 
-  drawDronelinga();
+  //Disegna chassis drone con una mesh
+  glPushMatrix();
+  //glScalef(2,2,2); // patch: riscaliamo la mesh di 2x
+  glTranslatef(0,0,0);
+  glColor3f(1,0,0); // colore rosso
+  droneChassis.Render();
 
   glColor3f(.4,.4,.4);
 
   // ruota posteriore D
   glPushMatrix();
-  glTranslatef( 0.58,+raggioRuotaP-0.28,+0.8);
+  glTranslatef( 0.195,0.1,0.16);
   glRotatef(mozzo, 0, 1, 0);
   // SONO NELLO SPAZIO RUOTA
-  glScalef(0.1, raggioRuotaP, raggioRuotaP);
-  drawWheel();
+  //glScalef(0.1, raggioRuotaP, raggioRuotaP);
+  //drawWheel();
+  blade.Render();
   glPopMatrix();
 
   // ruota posteriore S
   glPushMatrix();
-  glTranslatef(-0.58,+raggioRuotaP-0.28,+0.8);
+  glTranslatef(-0.195,0.1,0.16);
   glRotatef(mozzo,0,1,0);
-  glScalef(0.1, raggioRuotaP, raggioRuotaP);
-  drawWheel();
+  //glScalef(0.1, raggioRuotaP, raggioRuotaP);
+  //drawWheel();
+  blade.Render();
   glPopMatrix();
 
   // ruota anteriore D
   glPushMatrix();
-  glTranslatef( 0.58,+raggioRuotaA-0.28,-0.55);
+  glTranslatef( 0.195,0.1,-0.16);
   //glRotatef(sterzo,0,1,0);
   glRotatef(mozzo,0,1,0);
-  glScalef(0.08, raggioRuotaA, raggioRuotaA);
-  drawWheel();
+  //glScalef(0.08, raggioRuotaA, raggioRuotaA);
+  //drawWheel();
+  blade.Render();
   glPopMatrix();
 
   // ruota anteriore S
   glPushMatrix();
-  glTranslatef(-0.58,+raggioRuotaA-0.28,-0.55);
+  glTranslatef(-0.195,0.1,-0.16);
   //glRotatef(sterzo,0,1,0);
   glRotatef(mozzo,0,1,0);
   //drawAxis();
-  glScalef(0.08, raggioRuotaA, raggioRuotaA);
-  drawWheel();
+  //glScalef(0.08, raggioRuotaA, raggioRuotaA);
+  //drawWheel();
+  blade.Render();
   glPopMatrix();
 
   glPopMatrix();
