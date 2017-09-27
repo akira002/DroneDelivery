@@ -182,7 +182,7 @@ void Drone::Render() const{
 
   //drawAxis(); // disegno assi spazio mondo
   glPushMatrix();
-
+  //renderizza i movimenti del drone
   glTranslatef(px,py,pz);
   glRotatef(facing, 0,1,0);
 
@@ -202,7 +202,7 @@ void Drone::Render() const{
 
   // ruota posteriore D
   glPushMatrix();
-  glTranslatef( 0.195,0.1,0.16);
+  glTranslatef( 0.15,0.04,0.142);
   glRotatef(mozzo, 0, 1, 0);
   // SONO NELLO SPAZIO RUOTA
   //glScalef(0.1, raggioRuotaP, raggioRuotaP);
@@ -212,7 +212,7 @@ void Drone::Render() const{
 
   // ruota posteriore S
   glPushMatrix();
-  glTranslatef(-0.195,0.1,0.16);
+  glTranslatef(-0.15,0.04,0.142);
   glRotatef(mozzo,0,1,0);
   //glScalef(0.1, raggioRuotaP, raggioRuotaP);
   //drawWheel();
@@ -221,7 +221,7 @@ void Drone::Render() const{
 
   // ruota anteriore D
   glPushMatrix();
-  glTranslatef( 0.195,0.1,-0.16);
+  glTranslatef( 0.15,0.04,-0.142);
   //glRotatef(sterzo,0,1,0);
   glRotatef(mozzo,0,1,0);
   //glScalef(0.08, raggioRuotaA, raggioRuotaA);
@@ -231,7 +231,7 @@ void Drone::Render() const{
 
   // ruota anteriore S
   glPushMatrix();
-  glTranslatef(-0.195,0.1,-0.16);
+  glTranslatef(-0.15,0.04,-0.142);
   //glRotatef(sterzo,0,1,0);
   glRotatef(mozzo,0,1,0);
   //drawAxis();

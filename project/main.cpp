@@ -7,7 +7,7 @@
 
 float viewAlpha=20, viewBeta=40; // angoli che definiscono la vista
 float eyeDist=5.0; // distanza dell'occhio dall'origine
-int scrH=500, scrW=500; // altezza e larghezza viewport (in pixels)
+int scrH=640, scrW=640; // altezza e larghezza viewport (in pixels)
 
 Drone drone; // il nostro drone
 int nstep=0; // numero di passi di FISICA fatti fin'ora
@@ -185,7 +185,7 @@ void rendering(SDL_Window *win){
   // settiamo matrice di modellazione
   glScalef(.5,.5,.5);
 
-  drawAxis(); // disegna assi frame OGGETTO
+  //drawAxis(); // disegna assi frame OGGETTO
   //drawCubeWire();
 
   drone.Render(); // disegna la macchina
