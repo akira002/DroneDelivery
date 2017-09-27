@@ -145,7 +145,7 @@ void drawPista () {
 }
 
 /*
-// diesgna una ruota come due cubi intersecati a 45 gradi
+// diesgna una elica come due cubi intersecati a 45 gradi
 void drawWheel(){
   glPushMatrix();
   glScalef(1, 1.0/sqrt(2.0),  1.0/sqrt(2.0));
@@ -187,53 +187,10 @@ void Drone::Init(){
 
   // Nota: vel max = accMax*attritoZ / (1-attritoZ)
 
-  raggioRuotaA = 0.25;
-  raggioRuotaP = 0.35;
 
   grip = 0.45; // quanto il facing macchina si adegua velocemente allo sterzo
 }
 
-/*
-//vecchio codice ora commentato
-// disegna dronelinga composta da 1 cubo traslato e scalato
-static void drawDronelinga(){
-  // disegna dronelinga
-
-  glColor3f(1,0,0);
-
-  // sono nel frame CAR
-  glPushMatrix();
-
-  // vado al frame pezzo_A
-  glScalef(0.25 , 0.14 , 1);
-  drawCube();
-
-  // torno al frame CAR
-  glPopMatrix();
-
-  // vado frame pezzo_B
-  glPushMatrix();
-  glTranslatef(0,-0.11,-0.95);
-  glScalef(0.6, 0.05, 0.15);
-  drawCube();
-  glPopMatrix();
-
-   // vado frame pezzo_C
-  glPushMatrix();
-  glTranslatef(0,-0.11,0);
-  glScalef(0.6, 0.05, 0.3);
-  drawCube();
-  glPopMatrix();
-
-  // vado frame pezzo_D
-  glPushMatrix();
-  glRotatef(-5,1,0,0);
-  glTranslatef(0,+0.2,+0.95);
-  glScalef(0.6, 0.05, 0.3);
-  drawCube();
-  glPopMatrix();
-}
-*/
 
 // attiva una luce di openGL per simulare un faro della macchina
 void Drone::DrawHeadlight(float x, float y, float z, int lightN, bool useHeadlight) const{
@@ -267,15 +224,12 @@ void Drone::DrawHeadlight(float x, float y, float z, int lightN, bool useHeadlig
 
 
 // funzione che disegna tutti i pezzi della macchina
-// (dronelinga, + 4 route)
-// (da invodronesi due volte: per la macchina, e per la sua ombra)
+// (da invocarsi due volte: per la macchina, e per la sua ombra)
 // (se usecolor e' falso, NON sovrascrive il colore corrente
 //  e usa quello stabilito prima di chiamare la funzione)
-void Drone::RenderAllParts(bool usecolor) const{
+void Drone::RenderAllParts(bool usecolor) const {
 
-  // drawDronelinga(); // disegna la droneliga con pochi parallelepidedi
-
-  // disegna la droneliga con una mesh
+  // disegna lo chassis con una mesh
   glPushMatrix();
   //glScalef(-0.05,0.05,-0.05); // patch: riscaliamo la mesh di 1/10
   if (!useEnvmap)
@@ -288,45 +242,46 @@ void Drone::RenderAllParts(bool usecolor) const{
   droneChassis.RenderNxV(); // rendering delle mesh dronelinga usando normali per vertice
   if (usecolor) glEnable(GL_LIGHTING);
 
-
+  //disabilito la texture per le eliche
+  glDisable(GL_TEXTURE_2D);
   glColor3f(.4,.4,.4);
 
-  // ruota posteriore D
+  // elica posteriore D
   glPushMatrix();
   glTranslatef( 0.14,0.04,0.142);
   glRotatef(mozzo, 0, 1, 0);
-  // SONO NELLO SPAZIO RUOTA
-  //glScalef(0.1, raggioRuotaP, raggioRuotaP);
+  // SONO NELLO SPAZIO elica
+  //glScalef(0.1, raggioelicaP, raggioelicaP);
   //drawWheel();
   blade.RenderNxV();
   glPopMatrix();
 
-  // ruota posteriore S
+  // elica posteriore S
   glPushMatrix();
   glTranslatef(-0.14,0.04,0.142);
   glRotatef(mozzo,0,1,0);
-  //glScalef(0.1, raggioRuotaP, raggioRuotaP);
+  //glScalef(0.1, raggioelicaP, raggioelicaP);
   //drawWheel();
   blade.RenderNxV();
   glPopMatrix();
 
-  // ruota anteriore D
+  // elica anteriore D
   glPushMatrix();
   glTranslatef( 0.14,0.04,-0.142);
   //glRotatef(sterzo,0,1,0);
   glRotatef(mozzo,0,1,0);
-  //glScalef(0.08, raggioRuotaA, raggioRuotaA);
+  //glScalef(0.08, raggioelicaA, raggioelicaA);
   //drawWheel();
   blade.RenderNxV();
   glPopMatrix();
 
-  // ruota anteriore S
+  // elica anteriore S
   glPushMatrix();
   glTranslatef(-0.14,0.04,-0.142);
   //glRotatef(sterzo,0,1,0);
   glRotatef(mozzo,0,1,0);
   //drawAxis();
-  //glScalef(0.08, raggioRuotaA, raggioRuotaA);
+  //glScalef(0.08, raggioelicaA, raggioelicaA);
   //drawWheel();
   blade.RenderNxV();
   glPopMatrix();

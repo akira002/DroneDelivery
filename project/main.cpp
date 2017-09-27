@@ -496,7 +496,7 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
   glPolygonOffset(1,1);             // indietro di 1
 
   if (!LoadTexture(0,(char *)"logo.jpg")) return 0;
-  if (!LoadTexture(1,(char *)"envmap_flipped.jpg")) return 0;
+  if (!LoadTexture(1,(char *)"carbon.jpg")) return 0;
   if (!LoadTexture(2,(char *)"sky_ok.jpg")) return -1;
 
   bool done=0;
