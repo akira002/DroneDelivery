@@ -1,13 +1,15 @@
 #include <math.h>
+
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include "drone.h"
 
-#define CAMERA_BACK_DRONE 0
+#define CAMERA_BACK_CAR 0
 #define CAMERA_TOP_FIXED 1
-#define CAMERA_TOP_DRONE 2
+#define CAMERA_TOP_CAR 2
 #define CAMERA_PILOT 3
 #define CAMERA_MOUSE 4
 #define CAMERA_TYPE_MAX 5
@@ -15,9 +17,13 @@
 float viewAlpha=20, viewBeta=40; // angoli che definiscono la vista
 float eyeDist=5.0; // distanza dell'occhio dall'origine
 int scrH=750, scrW=750; // altezza e larghezza viewport (in pixels)
+bool useWireframe=false;
+bool useEnvmap=true;
+bool useHeadlight=false;
+bool useShadow=true;
 int cameraType=0;
 
-Drone drone; // il nostro drone
+Drone drone; // la nostra macchina
 int nstep=0; // numero di passi di FISICA fatti fin'ora
 const int PHYS_SAMPLING_STEP=10; // numero di millisec che un passo di fisica simula
 
@@ -26,6 +32,8 @@ const int fpsSampling = 3000; // lunghezza intervallo di calcolo fps
 float fps=0; // valore di fps dell'intervallo precedente
 int fpsNow=0; // quanti fotogrammi ho disegnato fin'ora nell'intervallo attuale
 Uint32 timeLastInterval=0; // quando e' cominciato l'ultimo intervallo
+
+extern void drawPista();
 
 // setta le matrici di trasformazione in modo
 // che le coordinate in spazio oggetto siano le coord
@@ -37,6 +45,30 @@ void  SetCoordToPixel(){
   glLoadIdentity();
   glTranslatef(-1,-1,0);
   glScalef(2.0/scrW, 2.0/scrH, 1);
+}
+
+bool LoadTexture(int textbind,char *filename){
+  SDL_Surface *s = IMG_Load(filename);
+  if (!s) return false;
+
+  glBindTexture(GL_TEXTURE_2D, textbind);
+  gluBuild2DMipmaps(
+    GL_TEXTURE_2D,
+    GL_RGB,
+    s->w, s->h,
+    GL_RGB,
+    GL_UNSIGNED_BYTE,
+    s->pixels
+  );
+  glTexParameteri(
+  GL_TEXTURE_2D,
+  GL_TEXTURE_MAG_FILTER,
+  GL_LINEAR );
+  glTexParameteri(
+  GL_TEXTURE_2D,
+  GL_TEXTURE_MIN_FILTER,
+  GL_LINEAR_MIPMAP_LINEAR );
+  return true;
 }
 
 // disegna gli assi nel sist. di riferimento
@@ -51,7 +83,7 @@ void drawAxis(){
     glVertex3f( 0,+1,0 );
 
     glVertex3f( 0,0,-1 );
-    glVertex3f( 0,0,+1.5 );
+    glVertex3f( 0,0,+1 );
   glEnd();
 
   glBegin(GL_TRIANGLES);
@@ -63,52 +95,57 @@ void drawAxis(){
     glVertex3f( +1-K,+K, 0 );
     glVertex3f( +1-K,-K, 0 );
 
-    glVertex3f( 0, 0,+1.5 );
-    glVertex3f( 0,+K,+1.5-K );
-    glVertex3f( 0,-K,+1.5-K );
+    glVertex3f( 0, 0,+1 );
+    glVertex3f( 0,+K,+1-K );
+    glVertex3f( 0,-K,+1-K );
   glEnd();
+
 }
 
+/*
+//vecchio codice ora commentato
 // disegna un cubo rasterizzando quads
 void drawCubeFill()
 {
+const float S=100;
+
   glBegin(GL_QUADS);
 
     glNormal3f(  0,0,+1  );
-    glVertex3f( +1,+1,+1 );
-    glVertex3f( -1,+1,+1 );
-    glVertex3f( -1,-1,+1 );
-    glVertex3f( +1,-1,+1 );
+    glVertex3f( +S,+S,+S );
+    glVertex3f( -S,+S,+S );
+    glVertex3f( -S,-S,+S );
+    glVertex3f( +S,-S,+S );
 
     glNormal3f(  0,0,-1  );
-    glVertex3f( +1,-1,-1 );
-    glVertex3f( -1,-1,-1 );
-    glVertex3f( -1,+1,-1 );
-    glVertex3f( +1,+1,-1 );
+    glVertex3f( +S,-S,-S );
+    glVertex3f( -S,-S,-S );
+    glVertex3f( -S,+S,-S );
+    glVertex3f( +S,+S,-S );
 
     glNormal3f(  0,+1,0  );
-    glVertex3f( +1,+1,+1 );
-    glVertex3f( -1,+1,+1 );
-    glVertex3f( -1,+1,-1 );
-    glVertex3f( +1,+1,-1 );
+    glVertex3f( +S,+S,+S );
+    glVertex3f( -S,+S,+S );
+    glVertex3f( -S,+S,-S );
+    glVertex3f( +S,+S,-S );
 
     glNormal3f(  0,-1,0  );
-    glVertex3f( +1,-1,-1 );
-    glVertex3f( -1,-1,-1 );
-    glVertex3f( -1,-1,+1 );
-    glVertex3f( +1,-1,+1 );
+    glVertex3f( +S,-S,-S );
+    glVertex3f( -S,-S,-S );
+    glVertex3f( -S,-S,+S );
+    glVertex3f( +S,-S,+S );
 
     glNormal3f( +1,0,0  );
-    glVertex3f( +1,+1,+1 );
-    glVertex3f( +1,-1,+1 );
-    glVertex3f( +1,-1,-1 );
-    glVertex3f( +1,+1,-1 );
+    glVertex3f( +S,+S,+S );
+    glVertex3f( +S,-S,+S );
+    glVertex3f( +S,-S,-S );
+    glVertex3f( +S,+S,-S );
 
     glNormal3f( -1,0,0  );
-    glVertex3f( -1,+1,-1 );
-    glVertex3f( -1,-1,-1 );
-    glVertex3f( -1,-1,+1 );
-    glVertex3f( -1,+1,+1 );
+    glVertex3f( -S,+S,-S );
+    glVertex3f( -S,-S,-S );
+    glVertex3f( -S,-S,+S );
+    glVertex3f( -S,+S,+S );
 
   glEnd();
 }
@@ -152,23 +189,55 @@ void drawCube()
   glColor3f(0,0,0);
   drawCubeWire();
 }
+*/
+
+void drawSphere(double r, int lats, int longs) {
+int i, j;
+  for(i = 0; i <= lats; i++) {
+     double lat0 = M_PI * (-0.5 + (double) (i - 1) / lats);
+     double z0  = sin(lat0);
+     double zr0 =  cos(lat0);
+
+     double lat1 = M_PI * (-0.5 + (double) i / lats);
+     double z1 = sin(lat1);
+     double zr1 = cos(lat1);
+
+     glBegin(GL_QUAD_STRIP);
+     for(j = 0; j <= longs; j++) {
+        double lng = 2 * M_PI * (double) (j - 1) / longs;
+        double x = cos(lng);
+        double y = sin(lng);
+
+//le normali servono per l'EnvMap
+        glNormal3f(x * zr0, y * zr0, z0);
+        glVertex3f(r * x * zr0, r * y * zr0, r * z0);
+        glNormal3f(x * zr1, y * zr1, z1);
+        glVertex3f(r * x * zr1, r * y * zr1, r * z1);
+     }
+     glEnd();
+  }
+}
 
 void drawFloor()
 {
-  const float S=20; // size
-  const float H=0; // altezza
-  const int K=200; //disegna K x K quads
+  const float S=100; // size
+  const float H=0;   // altezza
+  const int K=150; //disegna K x K quads
 
+  /*
+  //vecchio codice ora commentato
   // disegna un quad solo
-  /*glBegin(GL_QUADS);
-    glColor3f(0.7, 0.7, 0.7);
+  glBegin(GL_QUADS);
+    glColor3f(0.5, 0.2, 0.0);
     glNormal3f(0,1,0);
     glVertex3d(-S, H, -S);
     glVertex3d(+S, H, -S);
     glVertex3d(+S, H, +S);
     glVertex3d(-S, H, +S);
-  glEnd();*/
+  glEnd();
+  */
 
+  // disegna KxK quads
   glBegin(GL_QUADS);
     glColor3f(0.6, 0.6, 0.6); // colore uguale x tutti i quads
     glNormal3f(0,1,0);       // normale verticale uguale x tutti
@@ -200,7 +269,7 @@ void setCamera(){
 
 // controllo la posizione della camera a seconda dell'opzione selezionata
         switch (cameraType) {
-        case CAMERA_BACK_DRONE:
+        case CAMERA_BACK_CAR:
                 camd = 2.5;
                 camh = 1.0;
                 ex = px + camd*sinf;
@@ -225,7 +294,7 @@ void setCamera(){
                 cz = pz - camd*cosf;
                 gluLookAt(ex,ey,ez,cx,cy,cz,0.0,1.0,0.0);
                 break;
-        case CAMERA_TOP_DRONE:
+        case CAMERA_TOP_CAR:
                 camd = 2.5;
                 camh = 1.0;
                 ex = px + camd*sinf;
@@ -251,8 +320,53 @@ void setCamera(){
                 glTranslatef(0,0,-eyeDist);
                 glRotatef(viewBeta,  1,0,0);
                 glRotatef(viewAlpha, 0,1,0);
+/*
+printf("%f %f %f\n",viewAlpha,viewBeta,eyeDist);
+                ex=eyeDist*cos(viewAlpha)*sin(viewBeta);
+                ey=eyeDist*sin(viewAlpha)*sin(viewBeta);
+                ez=eyeDist*cos(viewBeta);
+                cx = px - camd*sinf;
+                cy = py + camh;
+                cz = pz - camd*cosf;
+                gluLookAt(ex,ey,ez,cx,cy,cz,0.0,1.0,0.0);
+*/
                 break;
         }
+}
+
+void drawSky() {
+int H = 100;
+
+  if (useWireframe) {
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(0,0,0);
+    glDisable(GL_LIGHTING);
+    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    drawSphere(100.0, 20, 20);
+    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+    glColor3f(1,1,1);
+    glEnable(GL_LIGHTING);
+  }
+  else
+  {
+        glBindTexture(GL_TEXTURE_2D,2);
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_TEXTURE_GEN_S);
+        glEnable(GL_TEXTURE_GEN_T);
+        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP); // Env map
+        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP);
+        glColor3f(1,1,1);
+        glDisable(GL_LIGHTING);
+
+     //   drawCubeFill();
+        drawSphere(100.0, 20, 20);
+
+        glDisable(GL_TEXTURE_GEN_S);
+        glDisable(GL_TEXTURE_GEN_T);
+        glDisable(GL_TEXTURE_2D);
+        glEnable(GL_LIGHTING);
+  }
+
 }
 
 /* Esegue il Rendering della scena */
@@ -261,22 +375,22 @@ void rendering(SDL_Window *win){
   // un frame in piu'!!!
   fpsNow++;
 
-  // linee spesse
-  glLineWidth(3);
+  glLineWidth(3); // linee larghe
 
   // settiamo il viewport
-  glViewport(0, 0, scrW, scrH);
+  glViewport(0,0, scrW, scrH);
 
-  // colore sfondo = nero
+  // colore sfondo = bianco
   glClearColor(1,1,1,1);
+
 
   // settiamo la matrice di proiezione
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
-  gluPerspective( 60, //fovy,
+  gluPerspective( 70, //fovy,
 		((float)scrW) / scrH,//aspect Y/X,
-		1,//zNear,
-		100//zFar
+		0.2,//distanza del NEAR CLIPPING PLANE in coordinate vista
+		1000  //distanza del FAR CLIPPING PLANE in coordinate vista
   );
 
   glMatrixMode( GL_MODELVIEW );
@@ -287,42 +401,62 @@ void rendering(SDL_Window *win){
 
   //drawAxis(); // disegna assi frame VISTA
 
-  // settiamo matrice di vista
-  /*glTranslatef(0,0,-eyeDist);
-  glRotatef(viewBeta,  1,0,0);
-  glRotatef(viewAlpha, 0,1,0);*/
+  // setto la posizione luce
+  float tmpv[4] = {0,1,2,  0}; // ultima comp=0 => luce direzionale
+  glLightfv(GL_LIGHT0, GL_POSITION, tmpv );
 
+
+  // settiamo matrice di vista
+  //glTranslatef(0,0,-eyeDist);
+  //glRotatef(viewBeta,  1,0,0);
+  //glRotatef(viewAlpha, 0,1,0);
   setCamera();
 
-  drawFloor(); // disegna il suolo
 
   //drawAxis(); // disegna assi frame MONDO
 
-  // settiamo matrice di modellazione
-  glScalef(.5,.5,.5);
+  static float tmpcol[4] = {1,1,1,  1};
+  glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, tmpcol);
+  glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 127);
 
+  glEnable(GL_LIGHTING);
+
+  // settiamo matrice di modellazione
   //drawAxis(); // disegna assi frame OGGETTO
   //drawCubeWire();
 
-  drone.Render(); // disegna il drone
+  drawSky(); // disegna il cielo come sfondo
 
-  // disegnamo i fps (frame x sec) come una barra a sinistra.
-  // (vuota = 0 fps, piena = 100 fps)
+  drawFloor(); // disegna il suolo
+  drawPista(); // disegna la pista
+
+  drone.Render(); // disegna la macchina
+
+  // attendiamo la fine della rasterizzazione di
+  // tutte le primitive mandate
+
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+
+// disegnamo i fps (frame x sec) come una barra a sinistra.
+// (vuota = 0 fps, piena = 100 fps)
   SetCoordToPixel();
+
   glBegin(GL_QUADS);
   float y=scrH*fps/100;
   float ramp=fps/100;
-  glColor3f(1-ramp,0,ramp); // color ramp: da rosso (0 fps) a blu (100 fps)
+  glColor3f(1-ramp,0,ramp);
   glVertex2d(10,0);
   glVertex2d(10,y);
   glVertex2d(0,y);
   glVertex2d(0,0);
   glEnd();
 
-  // attendiamo la fine della rasterizzazione di
-  // tutte le primitive mandate
-  glFinish();
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_LIGHTING);
 
+
+  glFinish();
   // ho finito: buffer di lavoro diventa visibile
   SDL_GL_SwapWindow(win);
 }
@@ -336,15 +470,19 @@ void redraw(){
   SDL_PushEvent(&e);
 }
 
-
 int main(int argc, char* argv[])
 {
 SDL_Window *win;
 SDL_GLContext mainContext;
 Uint32 windowID;
+SDL_Joystick *joystick;
+static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP, SDLK_DOWN};
 
   // inizializzazione di SDL
-  SDL_Init( SDL_INIT_VIDEO );
+  SDL_Init( SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+
+  SDL_JoystickEventState(SDL_ENABLE);
+  joystick = SDL_JoystickOpen(0);
 
   SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
   SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
@@ -356,13 +494,22 @@ Uint32 windowID;
   mainContext=SDL_GL_CreateContext(win);
 
   glEnable(GL_DEPTH_TEST);
-  //accendiamo le luci e coloriamo gli oggetti
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
-  glEnable(GL_NORMALIZE); // rinormalizza le normali prima di usarle
-
+  glEnable(GL_NORMALIZE); // opengl, per favore, rinormalizza le normali
+                          // prima di usarle
+  //glEnable(GL_CULL_FACE);
+  glFrontFace(GL_CW); // consideriamo Front Facing le facce ClockWise
   glEnable(GL_COLOR_MATERIAL);
   glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+  glEnable(GL_POLYGON_OFFSET_FILL); // caro openGL sposta i
+                                    // frammenti generati dalla
+                                    // rasterizzazione poligoni
+  glPolygonOffset(1,1);             // indietro di 1
+
+  if (!LoadTexture(0,(char *)"logo.jpg")) return 0;
+  if (!LoadTexture(1,(char *)"envmap_flipped.jpg")) return 0;
+  if (!LoadTexture(2,(char *)"sky_ok.jpg")) return -1;
 
   bool done=0;
   while (!done) {
@@ -374,16 +521,18 @@ Uint32 windowID;
      // se si: processa evento
      switch (e.type) {
       case SDL_KEYDOWN:
-        static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP, SDLK_DOWN};
         drone.controller.EatKey(e.key.keysym.sym, keymap , true);
         if (e.key.keysym.sym==SDLK_F1) cameraType=(cameraType+1)%CAMERA_TYPE_MAX;
+        if (e.key.keysym.sym==SDLK_F2) useWireframe=!useWireframe;
+        if (e.key.keysym.sym==SDLK_F3) useEnvmap=!useEnvmap;
+        if (e.key.keysym.sym==SDLK_F4) useHeadlight=!useHeadlight;
+        if (e.key.keysym.sym==SDLK_F5) useShadow=!useShadow;
         break;
       case SDL_KEYUP:
         drone.controller.EatKey(e.key.keysym.sym, keymap , false);
         break;
       case SDL_QUIT:
-          done=1;
-          break;
+          done=1;   break;
       case SDL_WINDOWEVENT:
          // dobbiamo ridisegnare la finestra
           if (e.window.event==SDL_WINDOWEVENT_EXPOSED)
@@ -406,26 +555,69 @@ Uint32 windowID;
       break;
 
       case SDL_MOUSEMOTION:
-        if (e.motion.state & SDL_BUTTON(1)  & cameraType==CAMERA_MOUSE) {
+        if (e.motion.state & SDL_BUTTON(1) & cameraType==CAMERA_MOUSE) {
           viewAlpha+=e.motion.xrel;
           viewBeta +=e.motion.yrel;
-          if (viewBeta<-90) viewBeta=-90;
+//          if (viewBeta<-90) viewBeta=-90;
+          if (viewBeta<+5) viewBeta=+5; //per non andare sotto la macchina
           if (viewBeta>+90) viewBeta=+90;
-	  rendering(win);
-//          redraw(); // richiedi ridisegno
+          // redraw(); // richiedi un ridisegno (non c'e' bisongo: si ridisegna gia'
+	               // al ritmo delle computazioni fisiche)
         }
         break;
 
-       case SDL_MOUSEWHEEL:
-        if (e.wheel.y < 0 ) {
-          // avvicino il punto di vista (zoom in)
-          eyeDist=eyeDist*0.9;
-          if (eyeDist<1) eyeDist = 1;
-        };
-        if (e.wheel.y > 0 ) {
-          // allontano il punto di vista (zoom out)
-          eyeDist=eyeDist/0.9;
-         };
+     case SDL_MOUSEWHEEL:
+       if (e.wheel.y < 0 ) {
+         // avvicino il punto di vista (zoom in)
+         eyeDist=eyeDist*0.9;
+         if (eyeDist<1) eyeDist = 1;
+       };
+       if (e.wheel.y > 0 ) {
+         // allontano il punto di vista (zoom out)
+         eyeDist=eyeDist/0.9;
+       };
+     break;
+
+     case SDL_JOYAXISMOTION: /* Handle Joystick Motion */
+        if( e.jaxis.axis == 0)
+         {
+            if ( e.jaxis.value < -3200  )
+             {
+              drone.controller.Joy(0 , true);
+              drone.controller.Joy(1 , false);
+//	      printf("%d <-3200 \n",e.jaxis.value);
+             }
+            if ( e.jaxis.value > 3200  )
+            {
+              drone.controller.Joy(0 , false);
+              drone.controller.Joy(1 , true);
+//	      printf("%d >3200 \n",e.jaxis.value);
+            }
+            if ( e.jaxis.value >= -3200 && e.jaxis.value <= 3200 )
+             {
+              drone.controller.Joy(0 , false);
+              drone.controller.Joy(1 , false);
+//	      printf("%d in [-3200,3200] \n",e.jaxis.value);
+             }
+	    rendering(win);
+            //redraw();
+        }
+        break;
+      case SDL_JOYBUTTONDOWN: /* Handle Joystick Button Presses */
+        if ( e.jbutton.button == 0 )
+        {
+           drone.controller.Joy(2 , true);
+//	   printf("jbutton 0\n");
+        }
+        if ( e.jbutton.button == 2 )
+        {
+           drone.controller.Joy(3 , true);
+//	   printf("jbutton 2\n");
+        }
+        break;
+      case SDL_JOYBUTTONUP: /* Handle Joystick Button Presses */
+           drone.controller.Joy(2 , false);
+           drone.controller.Joy(3 , false);
         break;
      }
     } else {
@@ -434,7 +626,6 @@ Uint32 windowID;
       Uint32 timeNow=SDL_GetTicks(); // che ore sono?
 
       if (timeLastInterval+fpsSampling<timeNow) {
-        // e' tempo di ricalcolare i Frame per Sec
         fps = 1000.0*((float)fpsNow) /(timeNow-timeLastInterval);
         fpsNow=0;
         timeLastInterval = timeNow;
@@ -453,10 +644,9 @@ Uint32 windowID;
         if (guardia++>1000) {done=true; break;} // siamo troppo lenti!
       }
 
-      if (doneSomething) {
-        rendering(win);
-//      redraw();
-      }
+      if (doneSomething)
+      rendering(win);
+      //redraw();
       else {
         // tempo libero!!!
       }

@@ -5,7 +5,7 @@ class Point3
 {
 public: 
   
-  float coord[3]; // l'UNICO campo: le coordinate x, y, z
+  float coord[3]; // l'UNICO campo: le cooedinate x, y, z
   
   float X() const { return coord[0]; }
   float Y() const { return coord[1]; }
@@ -97,6 +97,8 @@ public:
 // (solo per chiarezza, per distinguere nel codice fra punti e vettori)
 typedef Point3 Vector3;
 
-inline void glTranslate(Vector3 v){
+inline void glTranslate(Point3 v){
   glTranslatef(v.X(), v.Y(), v.Z() );
 }
+
+

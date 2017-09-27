@@ -11,6 +11,8 @@
 #include "point3.h"
 #include "mesh.h"
 
+extern bool useWireframe; // quick hack: una var globale definita altrove -> nel main
+
 void Mesh::ComputeNormalsPerFace()
 {
   for (int i=0; i<f.size(); i++)
@@ -19,14 +21,64 @@ void Mesh::ComputeNormalsPerFace()
   }
 }
 
-void Mesh::Render()
+// Computo normali per vertice
+// (come media rinormalizzata delle normali delle facce adjacenti)
+void Mesh::ComputeNormalsPerVertex()
 {
+  // uso solo le strutture di navigazione FV (da Faccia a Vertice)!
+
+  // fase uno: ciclo sui vertici, azzero tutte le normali
+  for (int i=0; i<v.size(); i++) {
+    v[i].n = Point3(0,0,0);
+  }
+
+  // fase due: ciclo sulle facce: accumulo le normali di F nei 3 V corrispondenti
+  for (int i=0; i<f.size(); i++) {
+    f[i].v[0]->n=f[i].v[0]->n + f[i].n;
+    f[i].v[1]->n=f[i].v[1]->n + f[i].n;
+    f[i].v[2]->n=f[i].v[2]->n + f[i].n;
+  }
+
+  // fase tre: ciclo sui vertici; rinormalizzo
+  // la normale media rinormalizzata e' uguale alla somma delle normnali, rinormalizzata
+  for (int i=0; i<v.size(); i++) {
+    v[i].n = v[i].n.Normalize();
+  }
+
+}
+
+// renderizzo la mesh in wireframe
+void Mesh::RenderWire(){
+  glLineWidth(1.0);
+  // (nota: ogni edge viene disegnato due volte.
+  // sarebbe meglio avere ed usare la struttura edge)
+  for (int i=0; i<f.size(); i++)
+  {
+    glBegin(GL_LINE_LOOP);
+      f[i].n.SendAsNormal();
+      (f[i].v[0])->p.SendAsVertex();
+      (f[i].v[1])->p.SendAsVertex();
+      (f[i].v[2])->p.SendAsVertex();
+    glEnd();
+  }
+}
+
+// Render usando la normale per faccia (FLAT SHADING)
+void Mesh::RenderNxF()
+{
+  if (useWireframe) {
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(.5,.5,.5);
+    RenderWire();
+    glColor3f(1,1,1);
+  }
+
   // mandiamo tutti i triangoli a schermo
-  //definisce la geometria 3D
   glBegin(GL_TRIANGLES);
   for (int i=0; i<f.size(); i++)
   {
     f[i].n.SendAsNormal(); // flat shading
+
     (f[i].v[0])->p.SendAsVertex();
 
     (f[i].v[1])->p.SendAsVertex();
@@ -36,7 +88,36 @@ void Mesh::Render()
   glEnd();
 }
 
+// Render usando la normale per vertice (GOURAUD SHADING)
+void Mesh::RenderNxV()
+{
+  if (useWireframe) {
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(.5,.5,.5);
+    RenderWire();
+    glColor3f(1,1,1);
+  }
+
+  // mandiamo tutti i triangoli a schermo
+  glBegin(GL_TRIANGLES);
+  for (int i=0; i<f.size(); i++)
+  {
+    (f[i].v[0])->n.SendAsNormal(); // gouraud shading (o phong?)
+    (f[i].v[0])->p.SendAsVertex();
+
+    (f[i].v[1])->n.SendAsNormal();
+    (f[i].v[1])->p.SendAsVertex();
+
+    (f[i].v[2])->n.SendAsNormal();
+    (f[i].v[2])->p.SendAsVertex();
+  }
+  glEnd();
+}
+
+// trova l'AXIS ALIGNED BOUNDING BOX
 void Mesh::ComputeBoundingBox(){
+  // basta trovare la min x, y, e z, e la max x, y, e z di tutti i vertici
+  // (nota: non e' necessario usare le facce: perche?)
   if (!v.size()) return;
   bbmin=bbmax=v[0].p;
   for (int i=0; i<v.size(); i++){
@@ -47,12 +128,15 @@ void Mesh::ComputeBoundingBox(){
   }
 }
 
+// carica la mesh da un file in formato Obj
+//   Nota: nel file, possono essere presenti sia quads che tris
+//   ma nella rappresentazione interna (classe Mesh) abbiamo solo tris.
+//
 bool Mesh::LoadFromObj(char* filename)
 {
 
   FILE* file = fopen(filename, "rt"); // apriamo il file in lettura
   if (!file) return false;
-
 
   //make a first pass through the file to get a count of the number
   //of vertices, normals, texcoords & triangles
@@ -68,7 +152,6 @@ bool Mesh::LoadFromObj(char* filename)
         switch(buf[0]) {
         case '#':               // comment
             // eat up rest of line
-            //legge una riga intera fino ad un newline (o EOF)
             fgets(buf, sizeof(buf), file);
             break;
         case 'v':               // v, vn, vt
@@ -76,7 +159,6 @@ bool Mesh::LoadFromObj(char* filename)
             case '\0':          // vertex
                 // eat up rest of line
                 fgets(buf, sizeof(buf), file);
-                //incrementa il contatore del numero di vertici
                 nv++;
                 break;
             default:
@@ -86,9 +168,9 @@ bool Mesh::LoadFromObj(char* filename)
          case 'f':               // face
                 fscanf(file, "%s", buf);
                 // can be one of %d, %d//%d, %d/%d, %d/%d/%d %d//%d
-                if (strstr(buf, "//")) {//se ha come sottostringa "//"
+                if (strstr(buf, "//")) {
                     // v//n
-                    sscanf(buf, "%d//%d", &va, &na); //additional arguments each containing a pointer to allocated storage where the interpretation of the extracted characters is stored
+                    sscanf(buf, "%d//%d", &va, &na);
                     fscanf(file, "%d//%d", &vb, &nb);
                     fscanf(file, "%d//%d", &vc, &nc);
                     nf++;
@@ -96,7 +178,7 @@ bool Mesh::LoadFromObj(char* filename)
                     while(fscanf(file, "%d//%d", &vd, &nd) > 0) {
                         nt++;
                     }
-                } else if (sscanf(buf, "%d/%d/%d", &va, &ta, &na) == 3) {//returns the number of items in the argument list successfully filled
+                } else if (sscanf(buf, "%d/%d/%d", &va, &ta, &na) == 3) {
                     // v/t/n
                     fscanf(file, "%d/%d/%d", &vb, &tb, &nb);
                     fscanf(file, "%d/%d/%d", &vc, &tc, &nc);
@@ -105,7 +187,7 @@ bool Mesh::LoadFromObj(char* filename)
                     while(fscanf(file, "%d/%d/%d", &vd, &td, &nd) > 0) {
                         nt++;
                     }
-                 } else if (sscanf(buf, "%d/%d", &va, &ta) == 2) {//returns the number of items in the argument list successfully filled
+                 } else if (sscanf(buf, "%d/%d", &va, &ta) == 2) {
                     // v/t
                     fscanf(file, "%d/%d", &vb, &tb);
                     fscanf(file, "%d/%d", &vc, &tc);
@@ -143,7 +225,7 @@ bool Mesh::LoadFromObj(char* filename)
 
   //on the second pass through the file, read all the data into the
   //allocated arrays
-  //abbiamo già gli array per vertici e facce allocati della giusta dimensione, ora li riempiamo coi dati
+
   nv = 0;
   nt = 0;
   while(fscanf(file, "%s", buf) != EOF) {
@@ -156,7 +238,6 @@ bool Mesh::LoadFromObj(char* filename)
             switch(buf[1]) {
             case '\0':          // vertex
                 fscanf(file, "%f %f %f", &x, &y, &z);
-                //memorizza un punto nell'array di punti
                 v[nv].p = Point3( x,y,z );
                 nv++;
                 break;

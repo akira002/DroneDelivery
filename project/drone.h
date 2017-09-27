@@ -4,11 +4,17 @@ public:
   bool key[NKEYS];
   void Init();
   void EatKey(int keycode, int* keymap, bool pressed_or_released);
+  void Joy(int keymap, bool pressed_or_released);
   Controller(){Init();} // costruttore
 };
 
 
 class Drone{
+
+  void RenderAllParts(bool usecolor) const;
+                         // disegna tutte le parti della macchina
+                         // invocato due volte: per la car e la sua ombra
+
 public:
   // Metodi
   void Init(); // inizializza variabili
@@ -18,7 +24,7 @@ public:
 
   Controller controller;
 
-  // STATO DEL DRONE
+  // STATO DELLA MACCHINA
   // (DoStep fa evolvere queste variabili nel tempo)
   float px,py,pz,facing; // posizione e orientamento
   float mozzo, sterzo; // stato interno
@@ -31,5 +37,7 @@ public:
         attritoX, attritoY, attritoZ; // attriti
   float velQuota; // velocità di aumento o diminuzione quota
 
+
 private:
+  void DrawHeadlight(float x, float y, float z, int lightN, bool useHeadlight) const;
 };
