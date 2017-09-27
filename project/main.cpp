@@ -5,13 +5,39 @@
 
 #include "drone.h"
 
+#define CAMERA_BACK_DRONE 0
+#define CAMERA_TOP_FIXED 1
+#define CAMERA_TOP_DRONE 2
+#define CAMERA_PILOT 3
+#define CAMERA_MOUSE 4
+#define CAMERA_TYPE_MAX 5
+
 float viewAlpha=20, viewBeta=40; // angoli che definiscono la vista
 float eyeDist=5.0; // distanza dell'occhio dall'origine
-int scrH=640, scrW=640; // altezza e larghezza viewport (in pixels)
+int scrH=750, scrW=750; // altezza e larghezza viewport (in pixels)
+int cameraType=0;
 
 Drone drone; // il nostro drone
 int nstep=0; // numero di passi di FISICA fatti fin'ora
 const int PHYS_SAMPLING_STEP=10; // numero di millisec che un passo di fisica simula
+
+// Frames Per Seconds
+const int fpsSampling = 3000; // lunghezza intervallo di calcolo fps
+float fps=0; // valore di fps dell'intervallo precedente
+int fpsNow=0; // quanti fotogrammi ho disegnato fin'ora nell'intervallo attuale
+Uint32 timeLastInterval=0; // quando e' cominciato l'ultimo intervallo
+
+// setta le matrici di trasformazione in modo
+// che le coordinate in spazio oggetto siano le coord
+// del pixel sullo schemo
+void  SetCoordToPixel(){
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(-1,-1,0);
+  glScalef(2.0/scrW, 2.0/scrH, 1);
+}
 
 // disegna gli assi nel sist. di riferimento
 void drawAxis(){
@@ -129,23 +155,111 @@ void drawCube()
 
 void drawFloor()
 {
-  const float S=2; // size
-  const float H=-0.15; // altezza
-  const int K=400; //disegna K x K quads
+  const float S=20; // size
+  const float H=0; // altezza
+  const int K=200; //disegna K x K quads
 
-  // disegna un quad
-  glBegin(GL_QUADS);
+  // disegna un quad solo
+  /*glBegin(GL_QUADS);
     glColor3f(0.7, 0.7, 0.7);
     glNormal3f(0,1,0);
     glVertex3d(-S, H, -S);
     glVertex3d(+S, H, -S);
     glVertex3d(+S, H, +S);
     glVertex3d(-S, H, +S);
+  glEnd();*/
+
+  glBegin(GL_QUADS);
+    glColor3f(0.6, 0.6, 0.6); // colore uguale x tutti i quads
+    glNormal3f(0,1,0);       // normale verticale uguale x tutti
+    for (int x=0; x<K; x++)
+    for (int z=0; z<K; z++) {
+      float x0=-S + 2*(x+0)*S/K;
+      float x1=-S + 2*(x+1)*S/K;
+      float z0=-S + 2*(z+0)*S/K;
+      float z1=-S + 2*(z+1)*S/K;
+      glVertex3d(x0, H, z0);
+      glVertex3d(x1, H, z0);
+      glVertex3d(x1, H, z1);
+      glVertex3d(x0, H, z1);
+    }
   glEnd();
+}
+
+// setto la posizione della camera
+void setCamera(){
+
+        double px = drone.px;
+        double py = drone.py;
+        double pz = drone.pz;
+        double angle = drone.facing;
+        double cosf = cos(angle*M_PI/180.0);
+        double sinf = sin(angle*M_PI/180.0);
+        double camd, camh, ex, ey, ez, cx, cy, cz;
+        double cosff, sinff;
+
+// controllo la posizione della camera a seconda dell'opzione selezionata
+        switch (cameraType) {
+        case CAMERA_BACK_DRONE:
+                camd = 2.5;
+                camh = 1.0;
+                ex = px + camd*sinf;
+                ey = py + camh;
+                ez = pz + camd*cosf;
+                cx = px - camd*sinf;
+                cy = py + camh;
+                cz = pz - camd*cosf;
+                gluLookAt(ex,ey,ez,cx,cy,cz,0.0,1.0,0.0);
+                break;
+        case CAMERA_TOP_FIXED:
+                camd = 0.5;
+                camh = 0.55;
+                angle = drone.facing + 40.0;
+                cosff = cos(angle*M_PI/180.0);
+                sinff = sin(angle*M_PI/180.0);
+                ex = px + camd*sinff;
+                ey = py + camh;
+                ez = pz + camd*cosff;
+                cx = px - camd*sinf;
+                cy = py + camh;
+                cz = pz - camd*cosf;
+                gluLookAt(ex,ey,ez,cx,cy,cz,0.0,1.0,0.0);
+                break;
+        case CAMERA_TOP_DRONE:
+                camd = 2.5;
+                camh = 1.0;
+                ex = px + camd*sinf;
+                ey = py + camh;
+                ez = pz + camd*cosf;
+                cx = px - camd*sinf;
+                cy = py + camh;
+                cz = pz - camd*cosf;
+                gluLookAt(ex,ey+5,ez,cx,cy,cz,0.0,1.0,0.0);
+                break;
+        case CAMERA_PILOT:
+                camd = 0.2;
+                camh = 0.55;
+                ex = px + camd*sinf;
+                ey = py + camh;
+                ez = pz + camd*cosf;
+                cx = px - camd*sinf;
+                cy = py + camh;
+                cz = pz - camd*cosf;
+                gluLookAt(ex,ey,ez,cx,cy,cz,0.0,1.0,0.0);
+                break;
+        case CAMERA_MOUSE:
+                glTranslatef(0,0,-eyeDist);
+                glRotatef(viewBeta,  1,0,0);
+                glRotatef(viewAlpha, 0,1,0);
+                break;
+        }
 }
 
 /* Esegue il Rendering della scena */
 void rendering(SDL_Window *win){
+
+  // un frame in piu'!!!
+  fpsNow++;
 
   // linee spesse
   glLineWidth(3);
@@ -174,9 +288,11 @@ void rendering(SDL_Window *win){
   //drawAxis(); // disegna assi frame VISTA
 
   // settiamo matrice di vista
-  glTranslatef(0,0,-eyeDist);
+  /*glTranslatef(0,0,-eyeDist);
   glRotatef(viewBeta,  1,0,0);
-  glRotatef(viewAlpha, 0,1,0);
+  glRotatef(viewAlpha, 0,1,0);*/
+
+  setCamera();
 
   drawFloor(); // disegna il suolo
 
@@ -188,7 +304,20 @@ void rendering(SDL_Window *win){
   //drawAxis(); // disegna assi frame OGGETTO
   //drawCubeWire();
 
-  drone.Render(); // disegna la macchina
+  drone.Render(); // disegna il drone
+
+  // disegnamo i fps (frame x sec) come una barra a sinistra.
+  // (vuota = 0 fps, piena = 100 fps)
+  SetCoordToPixel();
+  glBegin(GL_QUADS);
+  float y=scrH*fps/100;
+  float ramp=fps/100;
+  glColor3f(1-ramp,0,ramp); // color ramp: da rosso (0 fps) a blu (100 fps)
+  glVertex2d(10,0);
+  glVertex2d(10,y);
+  glVertex2d(0,y);
+  glVertex2d(0,0);
+  glEnd();
 
   // attendiamo la fine della rasterizzazione di
   // tutte le primitive mandate
@@ -247,6 +376,7 @@ Uint32 windowID;
       case SDL_KEYDOWN:
         static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP, SDLK_DOWN};
         drone.controller.EatKey(e.key.keysym.sym, keymap , true);
+        if (e.key.keysym.sym==SDLK_F1) cameraType=(cameraType+1)%CAMERA_TYPE_MAX;
         break;
       case SDL_KEYUP:
         drone.controller.EatKey(e.key.keysym.sym, keymap , false);
@@ -276,7 +406,7 @@ Uint32 windowID;
       break;
 
       case SDL_MOUSEMOTION:
-        if (e.motion.state & SDL_BUTTON(1) ) {
+        if (e.motion.state & SDL_BUTTON(1)  & cameraType==CAMERA_MOUSE) {
           viewAlpha+=e.motion.xrel;
           viewBeta +=e.motion.yrel;
           if (viewBeta<-90) viewBeta=-90;
@@ -302,6 +432,14 @@ Uint32 windowID;
       // nessun evento: siamo IDLE
 
       Uint32 timeNow=SDL_GetTicks(); // che ore sono?
+
+      if (timeLastInterval+fpsSampling<timeNow) {
+        // e' tempo di ricalcolare i Frame per Sec
+        fps = 1000.0*((float)fpsNow) /(timeNow-timeLastInterval);
+        fpsNow=0;
+        timeLastInterval = timeNow;
+      }
+
       bool doneSomething=false;
       int guardia=0; // sicurezza da loop infinito
 
