@@ -10,9 +10,8 @@
 #define CAMERA_BACK_CAR 0
 #define CAMERA_TOP_FIXED 1
 #define CAMERA_TOP_CAR 2
-#define CAMERA_PILOT 3
-#define CAMERA_MOUSE 4
-#define CAMERA_TYPE_MAX 5
+#define CAMERA_MOUSE 3
+#define CAMERA_TYPE_MAX 4
 
 float viewAlpha=20, viewBeta=40; // angoli che definiscono la vista
 float eyeDist=5.0; // distanza dell'occhio dall'origine
@@ -304,17 +303,6 @@ void setCamera(){
                 cy = py + camh;
                 cz = pz - camd*cosf;
                 gluLookAt(ex,ey+5,ez,cx,cy,cz,0.0,1.0,0.0);
-                break;
-        case CAMERA_PILOT:
-                camd = 0.2;
-                camh = 0.55;
-                ex = px + camd*sinf;
-                ey = py + camh;
-                ez = pz + camd*cosf;
-                cx = px - camd*sinf;
-                cy = py + camh;
-                cz = pz - camd*cosf;
-                gluLookAt(ex,ey,ez,cx,cy,cz,0.0,1.0,0.0);
                 break;
         case CAMERA_MOUSE:
                 glTranslatef(0,0,-eyeDist);
