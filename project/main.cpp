@@ -337,7 +337,7 @@ int H = 100;
   }
   else
   {
-        glBindTexture(GL_TEXTURE_2D,2);
+        glBindTexture(GL_TEXTURE_2D,1);
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_TEXTURE_GEN_S);
         glEnable(GL_TEXTURE_GEN_T);
@@ -495,9 +495,8 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
                                     // rasterizzazione poligoni
   glPolygonOffset(1,1);             // indietro di 1
 
-  if (!LoadTexture(0,(char *)"logo.jpg")) return 0;
-  if (!LoadTexture(1,(char *)"carbon.jpg")) return 0;
-  if (!LoadTexture(2,(char *)"sky_ok.jpg")) return -1;
+  if (!LoadTexture(0,(char *)"carbon.jpg")) return 0;
+  if (!LoadTexture(1,(char *)"sky_ok.jpg")) return -1;
 
   bool done=0;
   while (!done) {

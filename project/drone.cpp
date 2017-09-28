@@ -39,8 +39,8 @@ void Controller::Joy(int keymap, bool pressed_or_released)
 // Funzione che prepara tutto per usare un env map
 void SetupEnvmapTexture()
 {
-  // facciamo binding con la texture 1
-  glBindTexture(GL_TEXTURE_2D,1);
+  // facciamo binding con la texture 0
+  glBindTexture(GL_TEXTURE_2D,0);
 
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_TEXTURE_GEN_S); // abilito la generazione automatica delle coord texture S e T
@@ -54,7 +54,7 @@ void SetupEnvmapTexture()
 // funzione che prepara tutto per creare le coordinate texture (s,t) da (x,y,z)
 // Mappo l'intervallo [ minY , maxY ] nell'intervallo delle T [0..1]
 //     e l'intervallo [ minZ , maxZ ] nell'intervallo delle S [0..1]
-void SetupWheelTexture(Point3 min, Point3 max){
+/*void SetupWheelTexture(Point3 min, Point3 max){
   glBindTexture(GL_TEXTURE_2D,0);
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_TEXTURE_GEN_S);
@@ -71,7 +71,7 @@ void SetupWheelTexture(Point3 min, Point3 max){
   float t[4]={0,ty,0,  - min.Y()*ty };
   glTexGenfv(GL_S, GL_OBJECT_PLANE, s);
   glTexGenfv(GL_T, GL_OBJECT_PLANE, t);
-}
+}*/
 
 // DoStep: facciamo un passo di fisica (a delta_t costante)
 //
@@ -309,11 +309,13 @@ void Drone::Render() const{
   // ombra!
   if(useShadow)
   {
+    glTranslatef(0,-py,0); //traslo l'ombra sul terreno
+    glScalef(1+py/20,1+py/20,1+py/20);//aumento la dimensione dell'ombra con l'altezza del drone
     glColor3f(0.4,0.4,0.4); // colore fisso
     glTranslatef(0,0.01,0); // alzo l'ombra di un epsilon per evitare z-fighting con il pavimento
     glScalef(1.01,0,1.01);  // appiattisco sulla Y, ingrandisco dell'1% sulla Z e sulla X
     glDisable(GL_LIGHTING); // niente lighing per l'ombra
-    RenderAllParts(false);  // disegno la macchina appiattita
+    RenderAllParts(false);  // disegno il drone appiattito
 
     glEnable(GL_LIGHTING);
   }
