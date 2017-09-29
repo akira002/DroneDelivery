@@ -1,11 +1,48 @@
 #include "scenario.h"
 
+// caricamento degli oggetti mesh da file
+Mesh muro((char *)"./objects/wall.obj");
+
 bool mustCreateNewCube = true; // devo creare un nuovo cubo
 bool generatore = true; // devo inizializzare il seme
 bool isDrugs = true;
 int pos_x, pos_y, pos_z; // posizione del cubo
 
 extern int punteggio;
+
+void drawFloor()
+{
+  const float S=100; // size
+  const float H=0;   // altezza
+  const int K=150; //disegna K x K quads
+
+  // disegna KxK quads
+  glBegin(GL_QUADS);
+    glColor3f(0.6, 0.6, 0.6); // colore uguale x tutti i quads
+    glNormal3f(0,1,0);       // normale verticale uguale x tutti
+    for (int x=0; x<K; x++)
+    for (int z=0; z<K; z++) {
+      float x0=-S + 2*(x+0)*S/K;
+      float x1=-S + 2*(x+1)*S/K;
+      float z0=-S + 2*(z+0)*S/K;
+      float z1=-S + 2*(z+1)*S/K;
+      glVertex3d(x0, H, z0);
+      glVertex3d(x1, H, z0);
+      glVertex3d(x1, H, z1);
+      glVertex3d(x0, H, z1);
+    }
+  glEnd();
+}
+
+void drawMuro () {
+        glPushMatrix();
+        glColor3f(0.4,0.4,.8);
+        glScalef(3.8, 1.0, 0.75);
+        glTranslatef(0,0,0);
+        //muro.RenderNxV();
+        muro.RenderNxF();
+        glPopMatrix();
+}
 
 void drawCube(Drone drone) {
 
@@ -19,10 +56,18 @@ void drawCube(Drone drone) {
 
   // se devo rigenerare il cubo
   if(mustCreateNewCube) {
+
+    pos_y = 0; //le scatole stanno sempre appoggiate al terreno
     pos_x = (rand()%59+1)-30;
-    //pos_y = (rand()%29+1);
-    pos_y = 0; //i cubi stanno sempre appoggiati al terreno
-    pos_z = (rand()%59+1)-30;
+    if (isDrugs){
+        do {
+          pos_z = (rand()%59+1)-30;
+        } while (!(pos_z>2)); //le scatole di droga devono sempre stare da un lato del muro
+    } else {
+      do {
+        pos_z = (rand()%59+1)-30;
+      } while (!(pos_z<-2)); //quelle di denaro devono sempre stare dall'altro
+    }
     mustCreateNewCube = false;
     //printf("COORD1: %d %d %d\n", pos_x, pos_y, pos_z);
   }

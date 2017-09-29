@@ -5,7 +5,6 @@
 #include <GL/glu.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-
 #include "scenario.h"
 
 #define CAMERA_BACK_CAR 0
@@ -34,8 +33,6 @@ int fpsNow=0; // quanti fotogrammi ho disegnato fin'ora nell'intervallo attuale
 Uint32 timeLastInterval=0; // quando e' cominciato l'ultimo intervallo
 
 int punteggio = 0; // punteggio del giocatore
-
-extern void drawPista();
 
 // setta le matrici di trasformazione in modo
 // che le coordinate in spazio oggetto siano le coord
@@ -104,95 +101,6 @@ void drawAxis(){
 
 }
 
-/*
-//vecchio codice ora commentato
-// disegna un cubo rasterizzando quads
-void drawCubeFill()
-{
-const float S=100;
-
-  glBegin(GL_QUADS);
-
-    glNormal3f(  0,0,+1  );
-    glVertex3f( +S,+S,+S );
-    glVertex3f( -S,+S,+S );
-    glVertex3f( -S,-S,+S );
-    glVertex3f( +S,-S,+S );
-
-    glNormal3f(  0,0,-1  );
-    glVertex3f( +S,-S,-S );
-    glVertex3f( -S,-S,-S );
-    glVertex3f( -S,+S,-S );
-    glVertex3f( +S,+S,-S );
-
-    glNormal3f(  0,+1,0  );
-    glVertex3f( +S,+S,+S );
-    glVertex3f( -S,+S,+S );
-    glVertex3f( -S,+S,-S );
-    glVertex3f( +S,+S,-S );
-
-    glNormal3f(  0,-1,0  );
-    glVertex3f( +S,-S,-S );
-    glVertex3f( -S,-S,-S );
-    glVertex3f( -S,-S,+S );
-    glVertex3f( +S,-S,+S );
-
-    glNormal3f( +1,0,0  );
-    glVertex3f( +S,+S,+S );
-    glVertex3f( +S,-S,+S );
-    glVertex3f( +S,-S,-S );
-    glVertex3f( +S,+S,-S );
-
-    glNormal3f( -1,0,0  );
-    glVertex3f( -S,+S,-S );
-    glVertex3f( -S,-S,-S );
-    glVertex3f( -S,-S,+S );
-    glVertex3f( -S,+S,+S );
-
-  glEnd();
-}
-
-// disegna un cubo in wireframe
-void drawCubeWire()
-{
-  glBegin(GL_LINE_LOOP); // faccia z=+1
-    glVertex3f( +1,+1,+1 );
-    glVertex3f( -1,+1,+1 );
-    glVertex3f( -1,-1,+1 );
-    glVertex3f( +1,-1,+1 );
-  glEnd();
-
-  glBegin(GL_LINE_LOOP); // faccia z=-1
-    glVertex3f( +1,-1,-1 );
-    glVertex3f( -1,-1,-1 );
-    glVertex3f( -1,+1,-1 );
-    glVertex3f( +1,+1,-1 );
-  glEnd();
-
-  glBegin(GL_LINES);  // 4 segmenti da -z a +z
-    glVertex3f( -1,-1,-1 );
-    glVertex3f( -1,-1,+1 );
-
-    glVertex3f( +1,-1,-1 );
-    glVertex3f( +1,-1,+1 );
-
-    glVertex3f( +1,+1,-1 );
-    glVertex3f( +1,+1,+1 );
-
-    glVertex3f( -1,+1,-1 );
-    glVertex3f( -1,+1,+1 );
-  glEnd();
-}
-
-void drawCube()
-{
-  glColor3f(.9,.9,.9);
-  drawCubeFill();
-  glColor3f(0,0,0);
-  drawCubeWire();
-}
-*/
-
 void drawSphere(double r, int lats, int longs) {
 int i, j;
   for(i = 0; i <= lats; i++) {
@@ -220,42 +128,6 @@ int i, j;
   }
 }
 
-void drawFloor()
-{
-  const float S=100; // size
-  const float H=0;   // altezza
-  const int K=150; //disegna K x K quads
-
-  /*
-  //vecchio codice ora commentato
-  // disegna un quad solo
-  glBegin(GL_QUADS);
-    glColor3f(0.5, 0.2, 0.0);
-    glNormal3f(0,1,0);
-    glVertex3d(-S, H, -S);
-    glVertex3d(+S, H, -S);
-    glVertex3d(+S, H, +S);
-    glVertex3d(-S, H, +S);
-  glEnd();
-  */
-
-  // disegna KxK quads
-  glBegin(GL_QUADS);
-    glColor3f(0.6, 0.6, 0.6); // colore uguale x tutti i quads
-    glNormal3f(0,1,0);       // normale verticale uguale x tutti
-    for (int x=0; x<K; x++)
-    for (int z=0; z<K; z++) {
-      float x0=-S + 2*(x+0)*S/K;
-      float x1=-S + 2*(x+1)*S/K;
-      float z0=-S + 2*(z+0)*S/K;
-      float z1=-S + 2*(z+1)*S/K;
-      glVertex3d(x0, H, z0);
-      glVertex3d(x1, H, z0);
-      glVertex3d(x1, H, z1);
-      glVertex3d(x0, H, z1);
-    }
-  glEnd();
-}
 
 // setto la posizione della camera
 void setCamera(){
@@ -419,7 +291,7 @@ void rendering(SDL_Window *win){
   drawSky(); // disegna il cielo come sfondo
 
   drawFloor(); // disegna il suolo
-  drawPista(); // disegna la pista
+  drawMuro(); // disegna il muro
 
   drone.Render(); // disegna la macchina
 

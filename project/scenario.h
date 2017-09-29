@@ -6,7 +6,13 @@
 #include <GL/glu.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include "drone.h"
+#include <vector> // la classe vector di STL
 
-// caricamento degli oggetti mesh da file
+#include "drone.h"
+#include "point3.h"
+#include "mesh.h"
+
+
+void drawFloor();
+void drawMuro ();
 void drawCube(Drone drone);

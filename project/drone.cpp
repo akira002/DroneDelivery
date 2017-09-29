@@ -16,7 +16,7 @@
 // var globale di tipo mesh
 Mesh droneChassis((char *)"./objects/drone.obj"); // chiama il costruttore
 Mesh blade((char *)"./objects/blade.obj");
-Mesh pista((char *)"./objects/pista.obj");
+
 
 extern bool useEnvmap; // var globale esterna: per usare l'evnrionment mapping
 extern bool useHeadlight; // var globale esterna: per usare i fari
@@ -134,29 +134,6 @@ void Drone::DoStep(){
 }
 
 //void drawCube(); // questa e' definita altrove (quick hack)
-void drawAxis(); // anche questa
-
-void drawPista () {
-        glPushMatrix();
-        glColor3f(0.4,0.4,.8);
-        glScalef(0.75, 1.0, 0.75);
-        glTranslatef(0,0.01,0);
-        //pista.RenderNxV();
-        pista.RenderNxF();
-        glPopMatrix();
-}
-
-/*
-// diesgna una elica come due cubi intersecati a 45 gradi
-void drawWheel(){
-  glPushMatrix();
-  glScalef(1, 1.0/sqrt(2.0),  1.0/sqrt(2.0));
-  drawCube();
-  glRotatef(45,  1,0,0);
-  drawCube();
-  glPopMatrix();
-}
-*/
 
 void Controller::Init(){
   for (int i=0; i<NKEYS; i++) key[i]=false;
@@ -164,8 +141,10 @@ void Controller::Init(){
 
 void Drone::Init(){
   // inizializzo lo stato della macchina
-  px=pz=facing=0; // posizione e orientamento
+  px=0; // posizione e orientamento
+  facing = 180;
   py=0.0;
+  pz=-10;
 
   mozzo=sterzo=0;   // stato
   vx=vy=vz=0;      // velocita' attuale
