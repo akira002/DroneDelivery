@@ -36,7 +36,7 @@ void drawFloor()
 
 void drawMuro () {
         glPushMatrix();
-        glColor3f(0.4,0.4,.8);
+        glColor3f(0.1,0.1,.1);
         glScalef(3.8, 1.0, 0.75);
         glTranslatef(0,0,0);
         //muro.RenderNxV();

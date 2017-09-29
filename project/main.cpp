@@ -34,6 +34,10 @@ Uint32 timeLastInterval=0; // quando e' cominciato l'ultimo intervallo
 
 int punteggio = 0; // punteggio del giocatore
 
+//coordinate del cubo, servono per mappa
+extern int pos_x;
+extern int pos_z;
+
 // setta le matrici di trasformazione in modo
 // che le coordinate in spazio oggetto siano le coord
 // del pixel sullo schemo
@@ -232,6 +236,63 @@ int H = 100;
 
 }
 
+//funzione che disegna una mappa 2D della scena
+void drawMap(int scrH, int scrW) {
+  /* calcolo delle coordinate reali dell'oggetto su mappa */
+  float map_posx;
+  float map_posz;
+  map_posx = ((50*drone.px)/67) + 50 + 20;
+  map_posz = ((50*drone.pz)/67) + 50 + scrH-20-100;
+
+  float map_cubex;
+  float map_cubez;
+  map_cubex = ((50*pos_x)/67) + 50 + 20;
+  map_cubez = ((50*pos_z)/67) + 50 + scrH-20-100;
+
+  /* disegno mappa */
+
+
+  glColor3ub(210,210,210);
+  glBegin(GL_POLYGON);
+    glVertex2d(20,scrH -20 -100);
+    glVertex2d(20,scrH -20);
+    glVertex2d(120,scrH -20);
+    glVertex2d(120,scrH-20-100);
+   glEnd();
+
+   glColor3ub(0,0,0);
+   glBegin(GL_LINE_LOOP);
+     glVertex2d(20,scrH -20 -100);
+     glVertex2d(20,scrH -20);
+     glVertex2d(120,scrH-20);
+     glVertex2d(120,scrH-20-100);
+   glEnd();
+
+   glColor3ub(0,0,0);
+   glBegin(GL_LINE_LOOP);
+     glVertex2d(20, scrH-70);
+     glVertex2d(120, scrH-70);
+    glEnd();
+
+  /* disegno del cursore */
+  glColor3ub(0,0,255);
+  glBegin(GL_QUADS);
+    glVertex2d(map_posx, map_posz + 3);
+    glVertex2d(map_posx + 3, map_posz);
+    glVertex2d(map_posx, map_posz - 3);
+    glVertex2d(map_posx - 3, map_posz);
+  glEnd();
+
+  /* disegno del target */
+  glColor3ub(255,0,0);
+  glBegin(GL_QUADS);
+    glVertex2d(map_cubex, map_cubez + 3);
+    glVertex2d(map_cubex + 3, map_cubez);
+    glVertex2d(map_cubex, map_cubez - 3);
+    glVertex2d(map_cubex - 3, map_cubez);
+  glEnd();
+}
+
 /* Esegue il Rendering della scena */
 void rendering(SDL_Window *win){
 
@@ -306,6 +367,7 @@ void rendering(SDL_Window *win){
 
 // disegnamo i fps (frame x sec) come una barra a sinistra.
 // (vuota = 0 fps, piena = 100 fps)
+// impostiamo le matrici per poter disegnare in 2D
   SetCoordToPixel();
 
   glBegin(GL_QUADS);
@@ -317,6 +379,10 @@ void rendering(SDL_Window *win){
   glVertex2d(0,y);
   glVertex2d(0,0);
   glEnd();
+
+  //glLineWidth(2);
+  // disegna la mappa in alto a sinistra
+  drawMap(scrH, scrW);
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
