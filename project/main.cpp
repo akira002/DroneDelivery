@@ -1,11 +1,12 @@
 #include <math.h>
+#include <time.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#include "drone.h"
+#include "scenario.h"
 
 #define CAMERA_BACK_CAR 0
 #define CAMERA_TOP_FIXED 1
@@ -31,6 +32,8 @@ const int fpsSampling = 3000; // lunghezza intervallo di calcolo fps
 float fps=0; // valore di fps dell'intervallo precedente
 int fpsNow=0; // quanti fotogrammi ho disegnato fin'ora nell'intervallo attuale
 Uint32 timeLastInterval=0; // quando e' cominciato l'ultimo intervallo
+
+int punteggio = 0; // punteggio del giocatore
 
 extern void drawPista();
 
@@ -420,6 +423,9 @@ void rendering(SDL_Window *win){
 
   drone.Render(); // disegna la macchina
 
+  // disegna la scatola bersaglio
+  drawCube(drone);
+
   // attendiamo la fine della rasterizzazione di
   // tutte le primitive mandate
 
@@ -497,6 +503,8 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
 
   if (!LoadTexture(0,(char *)"carbon.jpg")) return 0;
   if (!LoadTexture(1,(char *)"sky_ok.jpg")) return -1;
+  if (!LoadTexture(2,(char *)"drugs.jpg")) return -1;
+  if (!LoadTexture(3,(char *)"money.jpg")) return -1;
 
   bool done=0;
   while (!done) {

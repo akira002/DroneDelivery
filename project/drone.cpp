@@ -97,8 +97,10 @@ void Drone::DoStep(){
   if (controller.key[Controller::RIGHT]) sterzo-=velSterzo;
   sterzo*=velRitornoSterzo; // ritorno a volante dritto
 
-  if (controller.key[Controller::ACC]) vzm-=accMax; // accelerazione in avanti
-  if (controller.key[Controller::DEC]) vzm+=accMax; // accelerazione indietro
+  if (py>0){//può volare solo se si alza da terra
+    if (controller.key[Controller::ACC]) vzm-=accMax; // accelerazione in avanti
+    if (controller.key[Controller::DEC]) vzm+=accMax; // accelerazione indietro
+  }
 
   //gestione quota
   if (controller.key[Controller::UP]) py += velQuota;//guadagno quota
