@@ -5,6 +5,9 @@
 #include <GL/glu.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include <stdio.h>
+
 #include "scenario.h"
 
 #define CAMERA_BACK_CAR 0
@@ -37,6 +40,100 @@ int punteggio = 0; // punteggio del giocatore
 //coordinate del cubo, servono per mappa
 extern int pos_x;
 extern int pos_z;
+
+//qualita del testo scritto e id della realtiva texture
+enum textquality {solid, shaded, blended};
+uint font_id = -1;
+
+//Funzione per stampare a schermo del testo
+void SDL_GL_DrawText(TTF_Font *font,char fgR, char fgG, char fgB, char fgA,
+              char bgR, char bgG, char bgB, char bgA, char *text, int x, int y,
+	                    enum textquality quality)
+{
+	SDL_Color tmpfontcolor = {fgR,fgG,fgB,fgA};
+	SDL_Color tmpfontbgcolor = {bgR, bgG, bgB, bgA};\
+	SDL_Surface *initial;
+	SDL_Surface *intermediary;
+	SDL_Rect location;
+	int w,h;
+
+/* Usa SDL_TTF per renderizzare il nostro testo */
+	initial=NULL;
+	if (quality == solid)
+	  initial = TTF_RenderText_Solid(font, text, tmpfontcolor);
+	else
+	  if (quality == shaded)
+	     initial = TTF_RenderText_Shaded(font, text, tmpfontcolor, tmpfontbgcolor);
+          else
+            if (quality == blended)
+               initial = TTF_RenderText_Blended(font, text, tmpfontcolor);
+
+/* Converte il testo renderizzato ad un formato conosciuto */
+	w = initial->w;
+	h = initial->h;
+
+/* Allochiamo una nuova surface RGB */
+	intermediary = SDL_CreateRGBSurface(0, w, h, 32,
+		0x000000ff,0x0000ff00, 0x00ff0000,0xff000000);
+/* Copiamo il contenuto dalla prima alla seconda surface */
+        SDL_BlitSurface(initial, 0, intermediary, 0);
+
+/* Diciamo a GL della nuova texture */
+	glBindTexture(GL_TEXTURE_2D, font_id);
+	glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0, GL_RGBA,
+			GL_UNSIGNED_BYTE, intermediary->pixels );
+
+
+/* GL_NEAREST looks horrible, if scaled... */
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+/* prepariamoci al render della texture */
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, font_id);
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+        if ( initial != NULL )
+        {
+         location.x = x;
+         location.y = y;
+        }
+
+/* Disegnamo dei quadrati come location del testo */
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 1.0f);
+			glVertex2f(location.x    , location.y);
+		glTexCoord2f(1.0f, 1.0f);
+			glVertex2f(location.x + w, location.y);
+		glTexCoord2f(1.0f, 0.0f);
+			glVertex2f(location.x + w, location.y + h);
+		glTexCoord2f(0.0f, 0.0f);
+			glVertex2f(location.x    , location.y + h);
+	glEnd();
+
+/*Disegnamo un contorno per i quadrati */
+        glColor3f(0.0f, 0.0f, 0.0f);
+        glBegin(GL_LINE_STRIP);
+                glVertex2f((GLfloat)location.x-1, (GLfloat)location.y-1);
+                glVertex2f((GLfloat)location.x + w +1, (GLfloat)location.y-1);
+                glVertex2f((GLfloat)location.x + w +1, (GLfloat)location.y + h +1);
+                glVertex2f((GLfloat)location.x-1    , (GLfloat)location.y + h +1);
+                glVertex2f((GLfloat)location.x-1, (GLfloat)location.y-1);
+        glEnd();
+
+/* Bad things happen if we delete the texture before it finishes */
+	glFinish();
+
+/* return the deltas in the unused w,h part of the rect */
+        location.w = initial->w;
+	location.h = initial->h;
+
+/* Clean up */
+	glDisable(GL_TEXTURE_2D);
+	SDL_FreeSurface(initial);
+	SDL_FreeSurface(intermediary);
+//	glColor3f(0.0f, 0.0f, 0.0f);
+}
 
 // setta le matrici di trasformazione in modo
 // che le coordinate in spazio oggetto siano le coord
@@ -294,7 +391,7 @@ void drawMap(int scrH, int scrW) {
 }
 
 /* Esegue il Rendering della scena */
-void rendering(SDL_Window *win){
+void rendering(SDL_Window *win, TTF_Font *font){
 
   // un frame in piu'!!!
   fpsNow++;
@@ -380,9 +477,26 @@ void rendering(SDL_Window *win){
   glVertex2d(0,0);
   glEnd();
 
-  //glLineWidth(2);
   // disegna la mappa in alto a sinistra
   drawMap(scrH, scrW);
+
+  /*
+  if(TTF_Init() < 0) {
+    fprintf(stderr, "Impossibile inizializzare TTF: %s\n",SDL_GetError());
+    SDL_Quit();
+  }
+
+  TTF_Font *font;
+  font = TTF_OpenFont ("FreeSans.ttf", 22);
+  if (font == NULL) {
+    fprintf (stderr, "Impossibile caricare il font.\n");
+  }*/
+
+  char str[3];
+  sprintf(str, "%d", punteggio);
+  char text[] = "Milioni di dollari guadagnati: ";
+  SDL_GL_DrawText(font, 0, 0, 0, 0, 210, 210, 210, 255, strcat(text, str), scrW-320, scrH-50, shaded);
+
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
@@ -412,6 +526,21 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
 
   // inizializzazione di SDL
   SDL_Init( SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+
+  //Con libreria SDL_ttf si può gestire il disegno di testo su una
+  //finestra grafica usando fonti truetype.
+  //SDL_ttf deve essere inizializzato con
+  if(TTF_Init() < 0) {
+    fprintf(stderr, "Impossibile inizializzare TTF: %s\n",SDL_GetError());
+    SDL_Quit();
+    return(2);
+  }
+
+  TTF_Font *font;
+  font = TTF_OpenFont ("FreeSans.ttf", 22);
+  if (font == NULL) {
+    fprintf (stderr, "Impossibile caricare il font.\n");
+  }
 
   SDL_JoystickEventState(SDL_ENABLE);
   joystick = SDL_JoystickOpen(0);
@@ -469,7 +598,7 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
       case SDL_WINDOWEVENT:
          // dobbiamo ridisegnare la finestra
           if (e.window.event==SDL_WINDOWEVENT_EXPOSED)
-            rendering(win);
+            rendering(win, font);
           else{
            windowID = SDL_GetWindowID(win);
            if (e.window.windowID == windowID)  {
@@ -478,7 +607,7 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
                      scrW = e.window.data1;
                      scrH = e.window.data2;
                      glViewport(0,0,scrW,scrH);
-                     rendering(win);
+                     rendering(win, font);
                      //redraw(); // richiedi ridisegno
                      break;
                   }
@@ -532,7 +661,7 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
               drone.controller.Joy(1 , false);
 //	      printf("%d in [-3200,3200] \n",e.jaxis.value);
              }
-	    rendering(win);
+	    rendering(win, font);
             //redraw();
         }
         break;
@@ -578,7 +707,7 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
       }
 
       if (doneSomething)
-      rendering(win);
+      rendering(win, font);
       //redraw();
       else {
         // tempo libero!!!
