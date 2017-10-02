@@ -142,7 +142,6 @@ void Drone::DoStep(){
   //setto i bordi del muro
   if (py <= 12 && pz<=3 && pz >= 0) pz = 3;
   if (py <= 12 && pz>=-3 && pz <= 0) pz = -3;
-  printf("%f %f %f\n", px, py, pz);
 }
 
 //void drawCube(); // questa e' definita altrove (quick hack)
