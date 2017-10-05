@@ -62,11 +62,11 @@ void drawCube(Drone drone) {
     if (isDrugs){
         do {
           pos_z = (rand()%59+1)-30;
-        } while (!(pos_z>2)); //le scatole di droga devono sempre stare da un lato del muro
+        } while (!(pos_z>3)); //le scatole di droga devono sempre stare da un lato del muro
     } else {
       do {
         pos_z = (rand()%59+1)-30;
-      } while (!(pos_z<-2)); //quelle di denaro devono sempre stare dall'altro
+      } while (!(pos_z<-3)); //quelle di denaro devono sempre stare dall'altro
     }
     mustCreateNewCube = false;
     //printf("COORD1: %d %d %d\n", pos_x, pos_y, pos_z);

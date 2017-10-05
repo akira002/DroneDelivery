@@ -568,10 +568,12 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
                                     // rasterizzazione poligoni
   glPolygonOffset(1,1);             // indietro di 1
 
-  if (!LoadTexture(0,(char *)"carbon.jpg")) return 0;
-  if (!LoadTexture(1,(char *)"sky_ok.jpg")) return -1;
-  if (!LoadTexture(2,(char *)"drugs.jpg")) return -1;
-  if (!LoadTexture(3,(char *)"money.jpg")) return -1;
+  if (!LoadTexture(0,(char *)"./images/carbon.jpg")) return -1;
+  if (!LoadTexture(1,(char *)"./images/sky_ok.jpg")) return -1;
+  if (!LoadTexture(2,(char *)"./images/drugs.jpg")) return -1;
+  if (!LoadTexture(3,(char *)"./images/money.jpg")) return -1;
+  if (!LoadTexture(4,(char *)"./images/wanted.jpg")) return -1;
+
 
   bool done=0;
   while (!done) {
