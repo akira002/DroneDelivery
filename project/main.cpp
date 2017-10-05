@@ -338,13 +338,13 @@ void drawMap(int scrH, int scrW) {
   /* calcolo delle coordinate reali dell'oggetto su mappa */
   float map_posx;
   float map_posz;
-  map_posx = ((50*drone.px)/67) + 50 + 20;
-  map_posz = ((50*drone.pz)/67) + 50 + scrH-20-100;
+  map_posx = ((50*drone.px)/71) + 50 + 20;
+  map_posz = ((50*drone.pz)/71) + 50 + scrH-20-100;
 
   float map_cubex;
   float map_cubez;
-  map_cubex = ((50*pos_x)/67) + 50 + 20;
-  map_cubez = ((50*pos_z)/67) + 50 + scrH-20-100;
+  map_cubex = ((50*pos_x)/71) + 50 + 20;
+  map_cubez = ((50*pos_z)/71) + 50 + scrH-20-100;
 
   /* disegno mappa */
 
@@ -450,6 +450,9 @@ void rendering(SDL_Window *win, TTF_Font *font){
 
   drawFloor(); // disegna il suolo
   drawMuro(); // disegna il muro
+  //disegna due manifesti wanted
+  drawManifest(35, 0, -12);
+  drawManifest(-12, 0, 12);
 
   drone.Render(); // disegna la macchina
 

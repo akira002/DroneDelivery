@@ -44,6 +44,104 @@ void drawMuro () {
         glPopMatrix();
 }
 
+void drawManifest (int x, int y, int z){
+  // disegno del manifesto con una texture personale su tutti e sei i lati
+  glBindTexture(GL_TEXTURE_2D, 4);
+  glEnable(GL_TEXTURE_2D);
+  glDisable(GL_TEXTURE_GEN_S);
+  glDisable(GL_TEXTURE_GEN_T);
+  glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+
+  glPushMatrix();
+  glTranslatef(x, y, z);
+  glTranslatef(0, -1, 0);
+  glBegin(GL_QUADS);
+      /* Front. */
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(1.0, 6.0, 2.0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(4.0, 6.0, 2.0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(4.0, 1.0, 2.0);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(1.0, 1.0, 2.0);
+
+      /* Down. */
+      glVertex3f(1.0, 1.0, 1.0);
+      glVertex3f(4.0, 1.0, 1.0);
+      glVertex3f(4.0, 1.0, 2.0);
+      glVertex3f(1.0, 1.0, 2.0);
+
+      /* Back. */
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(1.0, 6.0, 1.0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(4.0, 6.0, 1.0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(4.0, 1.0, 1.0);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(1.0, 1.0, 1.0);
+
+      /* Up. */
+      //glTexCoord2f(0.0, 0.0);
+      glVertex3f(1.0, 6.0, 1.0);
+      //glTexCoord2f(1.0, 0.0);
+      glVertex3f(4.0, 6.0, 1.0);
+      //glTexCoord2f(1.0, 1.0);
+      glVertex3f(4.0, 6.0, 2.0);
+      //glTexCoord2f(0.0, 1.0);
+      glVertex3f(1.0, 6.0, 2.0);
+
+      /* SideLeft. */
+      glVertex3f(1.0, 6.0, 1.0);
+      glVertex3f(1.0, 6.0, 2.0);
+      glVertex3f(1.0, 1.0, 2.0);
+      glVertex3f(1.0, 1.0, 1.0);
+
+      /* SideRight. */
+      glVertex3f(4.0, 6.0, 1.0);
+      glVertex3f(4.0, 6.0, 2.0);
+      glVertex3f(4.0, 1.0, 2.0);
+      glVertex3f(4.0, 1.0, 1.0);
+
+    glEnd();
+    glDisable(GL_TEXTURE_2D);
+
+    /*glLineWidth(1);
+
+    glColor3f(0,0,0);
+    glBegin(GL_LINE_LOOP);
+      glVertex3f(1.0, 1.0, 3.0);
+      glVertex3f(3.0, 1.0, 3.0);
+      glVertex3f(3.0, 3.0, 3.0);
+      glVertex3f(1.0, 3.0, 3.0);
+    glEnd();
+
+    glBegin(GL_LINE_LOOP);
+      glVertex3f(1.0, 3.0, 1.0);
+      glVertex3f(3.0, 3.0, 1.0);
+      glVertex3f(3.0, 1.0, 1.0);
+      glVertex3f(1.0, 1.0, 1.0);
+    glEnd();
+
+    glBegin(GL_LINES);
+    glVertex3f(1.0, 1.0, 3.0);
+    glVertex3f(1.0, 1.0, 1.0);
+
+    glVertex3f(3.0, 1.0, 3.0);
+    glVertex3f(3.0, 1.0, 1.0);
+
+    glVertex3f(1.0, 3.0, 3.0);
+    glVertex3f(1.0, 3.0, 1.0);
+
+    glVertex3f(3.0, 3.0, 3.0);
+    glVertex3f(3.0, 3.0, 1.0);
+    glEnd();
+    */
+
+glPopMatrix();
+}
+
 void drawCube(Drone drone) {
 
   // se devo inizializzare il seme
@@ -85,11 +183,7 @@ void drawCube(Drone drone) {
   glDisable(GL_TEXTURE_GEN_T);
   glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
 
-  glTranslatef(pos_x,pos_y,pos_z);
-  glTranslatef(2, 2, 2);
-  //glRotatef(mozzo,1,1,0);
-  glRotatef(0,1,1,0);
-  glTranslatef(-2, -2, -2);
+  glTranslatef(pos_x,pos_y -1,pos_z); //altrimenti il cubo fluttua
 
   glBegin(GL_QUADS);
       /* Front. */
