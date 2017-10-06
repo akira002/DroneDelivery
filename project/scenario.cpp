@@ -9,12 +9,23 @@ bool isDrugs = true;
 int pos_x, pos_y, pos_z; // posizione del cubo
 
 extern int punteggio;
+extern bool useColors;
 
 void drawFloor()
 {
   const float S=100; // size
   const float H=0;   // altezza
   const int K=150; //disegna K x K quads
+
+  if(!useColors) {
+    // disegno il terreno ripetendo una texture su di esso
+    glBindTexture(GL_TEXTURE_2D, 5);
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+    //glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  }
 
   // disegna KxK quads
   glBegin(GL_QUADS);
@@ -26,12 +37,17 @@ void drawFloor()
       float x1=-S + 2*(x+1)*S/K;
       float z0=-S + 2*(z+0)*S/K;
       float z1=-S + 2*(z+1)*S/K;
+      if(!useColors) glTexCoord2f(0.0, 0.0);
       glVertex3d(x0, H, z0);
+      if(!useColors) glTexCoord2f(1.0, 0.0);
       glVertex3d(x1, H, z0);
+      if(!useColors) glTexCoord2f(1.0, 1.0);
       glVertex3d(x1, H, z1);
+      if(!useColors) glTexCoord2f(0.0, 1.0);
       glVertex3d(x0, H, z1);
     }
   glEnd();
+  glDisable(GL_TEXTURE_2D);
 }
 
 void drawMuro () {
@@ -46,11 +62,13 @@ void drawMuro () {
 
 void drawManifest (int x, int y, int z){
   // disegno del manifesto con una texture personale su tutti e sei i lati
-  glBindTexture(GL_TEXTURE_2D, 4);
-  glEnable(GL_TEXTURE_2D);
-  glDisable(GL_TEXTURE_GEN_S);
-  glDisable(GL_TEXTURE_GEN_T);
-  glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+  if (!useColors){
+    glBindTexture(GL_TEXTURE_2D, 4);
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+  }
 
   glPushMatrix();
   glTranslatef(x, y, z);
@@ -58,86 +76,52 @@ void drawManifest (int x, int y, int z){
   glBegin(GL_QUADS);
       /* Front. */
       glTexCoord2f(0.0, 0.0);
-      glVertex3f(1.0, 6.0, 2.0);
+      glVertex3f(1.0, 6.0, 1.2);
       glTexCoord2f(1.0, 0.0);
-      glVertex3f(4.0, 6.0, 2.0);
+      glVertex3f(4.0, 6.0, 1.2);
       glTexCoord2f(1.0, 1.0);
-      glVertex3f(4.0, 1.0, 2.0);
+      glVertex3f(4.0, 1.0, 1.2);
       glTexCoord2f(0.0, 1.0);
-      glVertex3f(1.0, 1.0, 2.0);
+      glVertex3f(1.0, 1.0, 1.2);
+
 
       /* Down. */
       glVertex3f(1.0, 1.0, 1.0);
       glVertex3f(4.0, 1.0, 1.0);
-      glVertex3f(4.0, 1.0, 2.0);
-      glVertex3f(1.0, 1.0, 2.0);
+      glVertex3f(4.0, 1.0, 1.2);
+      glVertex3f(1.0, 1.0, 1.2);
 
       /* Back. */
-      glTexCoord2f(0.0, 0.0);
-      glVertex3f(1.0, 6.0, 1.0);
       glTexCoord2f(1.0, 0.0);
+      glVertex3f(1.0, 6.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
       glVertex3f(4.0, 6.0, 1.0);
-      glTexCoord2f(1.0, 1.0);
-      glVertex3f(4.0, 1.0, 1.0);
       glTexCoord2f(0.0, 1.0);
+      glVertex3f(4.0, 1.0, 1.0);
+      glTexCoord2f(1.0, 1.0);
       glVertex3f(1.0, 1.0, 1.0);
 
       /* Up. */
-      //glTexCoord2f(0.0, 0.0);
       glVertex3f(1.0, 6.0, 1.0);
-      //glTexCoord2f(1.0, 0.0);
       glVertex3f(4.0, 6.0, 1.0);
-      //glTexCoord2f(1.0, 1.0);
-      glVertex3f(4.0, 6.0, 2.0);
-      //glTexCoord2f(0.0, 1.0);
-      glVertex3f(1.0, 6.0, 2.0);
+      glVertex3f(4.0, 6.0, 1.2);
+      glVertex3f(1.0, 6.0, 1.2);
 
       /* SideLeft. */
       glVertex3f(1.0, 6.0, 1.0);
-      glVertex3f(1.0, 6.0, 2.0);
-      glVertex3f(1.0, 1.0, 2.0);
+      glVertex3f(1.0, 6.0, 1.2);
+      glVertex3f(1.0, 1.0, 1.2);
       glVertex3f(1.0, 1.0, 1.0);
 
       /* SideRight. */
       glVertex3f(4.0, 6.0, 1.0);
-      glVertex3f(4.0, 6.0, 2.0);
-      glVertex3f(4.0, 1.0, 2.0);
+      glVertex3f(4.0, 6.0, 1.2);
+      glVertex3f(4.0, 1.0, 1.2);
       glVertex3f(4.0, 1.0, 1.0);
 
     glEnd();
     glDisable(GL_TEXTURE_2D);
 
-    /*glLineWidth(1);
-
-    glColor3f(0,0,0);
-    glBegin(GL_LINE_LOOP);
-      glVertex3f(1.0, 1.0, 3.0);
-      glVertex3f(3.0, 1.0, 3.0);
-      glVertex3f(3.0, 3.0, 3.0);
-      glVertex3f(1.0, 3.0, 3.0);
-    glEnd();
-
-    glBegin(GL_LINE_LOOP);
-      glVertex3f(1.0, 3.0, 1.0);
-      glVertex3f(3.0, 3.0, 1.0);
-      glVertex3f(3.0, 1.0, 1.0);
-      glVertex3f(1.0, 1.0, 1.0);
-    glEnd();
-
-    glBegin(GL_LINES);
-    glVertex3f(1.0, 1.0, 3.0);
-    glVertex3f(1.0, 1.0, 1.0);
-
-    glVertex3f(3.0, 1.0, 3.0);
-    glVertex3f(3.0, 1.0, 1.0);
-
-    glVertex3f(1.0, 3.0, 3.0);
-    glVertex3f(1.0, 3.0, 1.0);
-
-    glVertex3f(3.0, 3.0, 3.0);
-    glVertex3f(3.0, 3.0, 1.0);
-    glEnd();
-    */
 
 glPopMatrix();
 }
@@ -156,14 +140,14 @@ void drawCube(Drone drone) {
   if(mustCreateNewCube) {
 
     pos_y = 0; //le scatole stanno sempre appoggiate al terreno
-    pos_x = (rand()%59+1)-30;
+    pos_x = (rand()%69+1)-20;
     if (isDrugs){
         do {
-          pos_z = (rand()%59+1)-30;
+          pos_z = (rand()%69+1)-20;
         } while (!(pos_z>3)); //le scatole di droga devono sempre stare da un lato del muro
     } else {
       do {
-        pos_z = (rand()%59+1)-30;
+        pos_z = (rand()%69+1)-20;
       } while (!(pos_z<-3)); //quelle di denaro devono sempre stare dall'altro
     }
     mustCreateNewCube = false;
@@ -289,7 +273,7 @@ void drawCube(Drone drone) {
           }
           mustCreateNewCube = true;
           isDrugs = !isDrugs;
-          printf("Punteggio: %d\n", punteggio);
+          //printf("Punteggio: %d\n", punteggio);
     }
 
 glPopMatrix();

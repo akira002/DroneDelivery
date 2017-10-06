@@ -19,7 +19,6 @@ Mesh blade((char *)"./objects/blade.obj");
 
 
 extern bool useEnvmap; // var globale esterna: per usare l'evnrionment mapping
-extern bool useHeadlight; // var globale esterna: per usare i fari
 extern bool useShadow; // var globale esterna: per generare l'ombra
 
 // da invodronee quando e' stato premuto/rilasciato il tasto numero "keycode"
@@ -184,37 +183,6 @@ void Drone::Init(){
 }
 
 
-// attiva una luce di openGL per simulare un faro della macchina
-void Drone::DrawHeadlight(float x, float y, float z, int lightN, bool useHeadlight) const{
-  int usedLight=GL_LIGHT1 + lightN;
-
-  if(useHeadlight)
-  {
-  glEnable(usedLight);
-
-  float col0[4]= {0.8,0.8,0.0,  1};
-  glLightfv(usedLight, GL_DIFFUSE, col0);
-
-  float col1[4]= {0.5,0.5,0.0,  1};
-  glLightfv(usedLight, GL_AMBIENT, col1);
-
-  float tmpPos[4] = {x,y,z,  1}; // ultima comp=1 => luce posizionale
-  glLightfv(usedLight, GL_POSITION, tmpPos );
-
-  float tmpDir[4] = {0,0,-1,  0}; // ultima comp=1 => luce posizionale
-  glLightfv(usedLight, GL_SPOT_DIRECTION, tmpDir );
-
-  glLightf (usedLight, GL_SPOT_CUTOFF, 30);
-  glLightf (usedLight, GL_SPOT_EXPONENT,5);
-
-  glLightf(usedLight,GL_CONSTANT_ATTENUATION,0);
-  glLightf(usedLight,GL_LINEAR_ATTENUATION,1);
-  }
-  else
-   glDisable(usedLight);
-}
-
-
 // funzione che disegna tutti i pezzi della macchina
 // (da invocarsi due volte: per la macchina, e per la sua ombra)
 // (se usecolor e' falso, NON sovrascrive il colore corrente
@@ -292,9 +260,6 @@ void Drone::Render() const{
 
   // sono nello spazio MACCHINA
   //drawAxis(); // disegno assi spazio macchina
-
-  DrawHeadlight(-0.3,0,-1, 0, useHeadlight); // accendi faro sinistro
-  DrawHeadlight(+0.3,0,-1, 1, useHeadlight); // accendi faro destro
 
   RenderAllParts(true);
 

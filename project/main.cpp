@@ -21,7 +21,7 @@ float eyeDist=5.0; // distanza dell'occhio dall'origine
 int scrH=750, scrW=750; // altezza e larghezza viewport (in pixels)
 bool useWireframe=false;
 bool useEnvmap=true;
-bool useHeadlight=false;
+bool useColors=false;
 bool useShadow=true;
 int cameraType=0;
 
@@ -34,6 +34,8 @@ const int fpsSampling = 3000; // lunghezza intervallo di calcolo fps
 float fps=0; // valore di fps dell'intervallo precedente
 int fpsNow=0; // quanti fotogrammi ho disegnato fin'ora nell'intervallo attuale
 Uint32 timeLastInterval=0; // quando e' cominciato l'ultimo intervallo
+Uint32 timeStartGame=0; //quando e' incominciata la partita
+Uint32 actualTime; //tempo di gioco
 
 int punteggio = 0; // punteggio del giocatore
 
@@ -483,23 +485,15 @@ void rendering(SDL_Window *win, TTF_Font *font){
   // disegna la mappa in alto a sinistra
   drawMap(scrH, scrW);
 
-  /*
-  if(TTF_Init() < 0) {
-    fprintf(stderr, "Impossibile inizializzare TTF: %s\n",SDL_GetError());
-    SDL_Quit();
-  }
-
-  TTF_Font *font;
-  font = TTF_OpenFont ("FreeSans.ttf", 22);
-  if (font == NULL) {
-    fprintf (stderr, "Impossibile caricare il font.\n");
-  }*/
-
   char str[3];
   sprintf(str, "%d", punteggio);
   char text[] = "Milioni di dollari guadagnati: ";
   SDL_GL_DrawText(font, 0, 0, 0, 0, 210, 210, 210, 255, strcat(text, str), scrW-320, scrH-50, shaded);
 
+  actualTime = (SDL_GetTicks() - timeStartGame) /1000;
+  sprintf(str, "%u", actualTime);
+  char text2[] = "Tempo: ";
+  SDL_GL_DrawText(font, 0, 0, 0, 0, 210, 210, 210, 255, strcat(text2, str), scrW-320, scrH-75, shaded);
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
@@ -519,6 +513,39 @@ void redraw(){
   SDL_PushEvent(&e);
 }
 
+//disegna la schermata di game over
+void gameOver(SDL_Window *win, TTF_Font *font, int scrH, int scrW) {
+  // settiamo il viewport
+  glViewport(0,0, scrW, scrH);
+
+  // colore di sfondo (fuori dal mondo)
+  glClearColor(0,0.4,0,1);
+
+  // riempe tutto lo screen buffer di pixel color sfondo
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+  SetCoordToPixel();
+
+  glLineWidth(2);
+
+  // conversione della variabile tempo a stringa
+  char tempo[3];
+  sprintf(tempo, "%u", actualTime);
+
+  char stringa_punti[] = "Tempo impiegato: ";
+  char g_over[] = "GAME OVER";
+  char uscire[] = "Premi esc per uscire";
+
+  int distanzaMargine = 73;
+
+  SDL_GL_DrawText(font, 0, 0, 0, 0, 210, 210, 210, 255, strcat(stringa_punti, tempo), scrW/2-distanzaMargine, scrH/2+100, shaded);
+  SDL_GL_DrawText(font, 0, 0, 0, 0, 210, 210, 210, 255, g_over, scrW/2-55, scrH/3+20, shaded);
+  SDL_GL_DrawText(font, 0, 0, 0, 0, 210, 210, 210, 255, uscire, scrW/2-90, scrH/4+20, shaded);
+  glFinish();
+
+  SDL_GL_SwapWindow(win);
+}
+
 int main(int argc, char* argv[])
 {
 SDL_Window *win;
@@ -529,6 +556,9 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
 
   // inizializzazione di SDL
   SDL_Init( SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+
+  //inizializzo il contatore del tempo dall'inizio della partita
+  timeStartGame = SDL_GetTicks();
 
   //Con libreria SDL_ttf si può gestire il disegno di testo su una
   //finestra grafica usando fonti truetype.
@@ -576,6 +606,7 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
   if (!LoadTexture(2,(char *)"./images/drugs.jpg")) return -1;
   if (!LoadTexture(3,(char *)"./images/money.jpg")) return -1;
   if (!LoadTexture(4,(char *)"./images/wanted.jpg")) return -1;
+  if (!LoadTexture(5,(char *)"./images/asphalt2.jpg")) return -1;
 
 
   bool done=0;
@@ -592,7 +623,7 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
         if (e.key.keysym.sym==SDLK_F1) cameraType=(cameraType+1)%CAMERA_TYPE_MAX;
         if (e.key.keysym.sym==SDLK_F2) useWireframe=!useWireframe;
         if (e.key.keysym.sym==SDLK_F3) useEnvmap=!useEnvmap;
-        if (e.key.keysym.sym==SDLK_F4) useHeadlight=!useHeadlight;
+        if (e.key.keysym.sym==SDLK_F4) useColors=!useColors;
         if (e.key.keysym.sym==SDLK_F5) useShadow=!useShadow;
         break;
       case SDL_KEYUP:
@@ -714,6 +745,43 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
       if (doneSomething)
       rendering(win, font);
       //redraw();
+
+      if (punteggio == 5){
+        printf("Hai messo da parte abbastanza dollari per una vita agiata\n");
+        printf("Tempo impiegato %u\n", actualTime);
+        done = true;
+
+        int done1 = 0;
+
+        // schermata di game over
+        while(!done1) {
+          if (SDL_PollEvent(&e)) {
+            switch (e.type) {
+              case SDL_KEYDOWN:
+              if (e.key.keysym.sym==SDLK_ESCAPE) done1 = 1;
+                break;
+              case SDL_JOYBUTTONDOWN:
+                done1 = 1;
+                break;
+              case SDL_WINDOWEVENT:
+                windowID = SDL_GetWindowID(win);
+                if (e.window.windowID == windowID) {
+                  switch (e.window.event)  {
+                    case SDL_WINDOWEVENT_SIZE_CHANGED: {
+                      scrW = e.window.data1;
+                      scrH = e.window.data2;
+                      glViewport(0,0,scrW,scrH);
+                      break;
+                    }
+                  }
+                }
+            }
+          } else { // disegno la schermata di game over
+              gameOver(win, font, scrH, scrW);
+          }
+        }//fine while
+      }//fine if punteggio
+
       else {
         // tempo libero!!!
       }
