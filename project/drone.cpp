@@ -29,12 +29,6 @@ void Controller::EatKey(int keycode, int* keymap, bool pressed_or_released)
   }
 }
 
-// da invodronee quando e' stato premuto/rilasciato un jbutton
-void Controller::Joy(int keymap, bool pressed_or_released)
-{
-    key[keymap]=pressed_or_released;
-}
-
 // Funzione che prepara tutto per usare un env map
 void SetupEnvmapTexture()
 {
@@ -42,7 +36,7 @@ void SetupEnvmapTexture()
   glBindTexture(GL_TEXTURE_2D,0);
 
   glEnable(GL_TEXTURE_2D);
-  glEnable(GL_TEXTURE_GEN_S); // abilito la generazione automatica delle coord texture S e T
+  glEnable(GL_TEXTURE_GEN_S); // abilito la generazione automatica delle coord texture S e T (proiettata su oggetto tramite sfera)
   glEnable(GL_TEXTURE_GEN_T);
   glTexGeni(GL_S, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP); // Env map
   glTexGeni(GL_T, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP);

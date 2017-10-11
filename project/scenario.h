@@ -17,3 +17,5 @@ void drawFloor();
 void drawMuro ();
 void drawCube(Drone drone);
 void drawManifest (int x, int y, int z);
+void drawSphere(double r, int lats, int longs);
+void drawSky();

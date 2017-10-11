@@ -10,9 +10,9 @@
 
 #include "scenario.h"
 
-#define CAMERA_BACK_CAR 0
+#define CAMERA_BACK_DRONE 0
 #define CAMERA_TOP_FIXED 1
-#define CAMERA_TOP_CAR 2
+#define CAMERA_TOP_DRONE 2
 #define CAMERA_MOUSE 3
 #define CAMERA_TYPE_MAX 4
 
@@ -204,33 +204,6 @@ void drawAxis(){
 
 }
 
-void drawSphere(double r, int lats, int longs) {
-int i, j;
-  for(i = 0; i <= lats; i++) {
-     double lat0 = M_PI * (-0.5 + (double) (i - 1) / lats);
-     double z0  = sin(lat0);
-     double zr0 =  cos(lat0);
-
-     double lat1 = M_PI * (-0.5 + (double) i / lats);
-     double z1 = sin(lat1);
-     double zr1 = cos(lat1);
-
-     glBegin(GL_QUAD_STRIP);
-     for(j = 0; j <= longs; j++) {
-        double lng = 2 * M_PI * (double) (j - 1) / longs;
-        double x = cos(lng);
-        double y = sin(lng);
-
-//le normali servono per l'EnvMap
-        glNormal3f(x * zr0, y * zr0, z0);
-        glVertex3f(r * x * zr0, r * y * zr0, r * z0);
-        glNormal3f(x * zr1, y * zr1, z1);
-        glVertex3f(r * x * zr1, r * y * zr1, r * z1);
-     }
-     glEnd();
-  }
-}
-
 
 // setto la posizione della camera
 void setCamera(){
@@ -246,7 +219,7 @@ void setCamera(){
 
 // controllo la posizione della camera a seconda dell'opzione selezionata
         switch (cameraType) {
-        case CAMERA_BACK_CAR:
+        case CAMERA_BACK_DRONE:
                 camd = 2.5;
                 camh = 1.0;
                 ex = px + camd*sinf;
@@ -271,7 +244,7 @@ void setCamera(){
                 cz = pz - camd*cosf;
                 gluLookAt(ex,ey,ez,cx,cy,cz,0.0,1.0,0.0);
                 break;
-        case CAMERA_TOP_CAR:
+        case CAMERA_TOP_DRONE:
                 camd = 2.5;
                 camh = 1.0;
                 ex = px + camd*sinf;
@@ -300,40 +273,6 @@ printf("%f %f %f\n",viewAlpha,viewBeta,eyeDist);
         }
 }
 
-void drawSky() {
-int H = 100;
-
-  if (useWireframe) {
-    glDisable(GL_TEXTURE_2D);
-    glColor3f(0,0,0);
-    glDisable(GL_LIGHTING);
-    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-    drawSphere(100.0, 20, 20);
-    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-    glColor3f(1,1,1);
-    glEnable(GL_LIGHTING);
-  }
-  else
-  {
-        glBindTexture(GL_TEXTURE_2D,1);
-        glEnable(GL_TEXTURE_2D);
-        glEnable(GL_TEXTURE_GEN_S);
-        glEnable(GL_TEXTURE_GEN_T);
-        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP); // Env map
-        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP);
-        glColor3f(1,1,1);
-        glDisable(GL_LIGHTING);
-
-     //   drawCubeFill();
-        drawSphere(100.0, 20, 20);
-
-        glDisable(GL_TEXTURE_GEN_S);
-        glDisable(GL_TEXTURE_GEN_T);
-        glDisable(GL_TEXTURE_2D);
-        glEnable(GL_LIGHTING);
-  }
-
-}
 
 //funzione che disegna una mappa 2D della scena
 void drawMap(int scrH, int scrW) {
@@ -426,7 +365,18 @@ void rendering(SDL_Window *win, TTF_Font *font){
 
   // setto la posizione luce
   float tmpv[4] = {0,1,2,  0}; // ultima comp=0 => luce direzionale
+                              // ultima comp=1 => i raggi escono in tutte le direzioni
   glLightfv(GL_LIGHT0, GL_POSITION, tmpv );
+
+  // the ambient RGBA intensity of the light
+  //float tmpp[4] = {2,2,2,  1};
+  //glLightfv(GL_LIGHT0, GL_AMBIENT, tmpp);
+
+  // GL_FLAT è il default: ogni poligono ha un colore
+  // GL_SMOOTH: ogni punto della superficie del poligono ha un'ombreggiatura derivata
+  //            dall'interpolazione delle normali ai vertici
+  //glShadeModel(GL_FLAT);
+
 
 
   // settiamo matrice di vista
@@ -551,11 +501,10 @@ int main(int argc, char* argv[])
 SDL_Window *win;
 SDL_GLContext mainContext;
 Uint32 windowID;
-SDL_Joystick *joystick;
 static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP, SDLK_DOWN};
 
   // inizializzazione di SDL
-  SDL_Init( SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+  SDL_Init( SDL_INIT_VIDEO);
 
   //inizializzo il contatore del tempo dall'inizio della partita
   timeStartGame = SDL_GetTicks();
@@ -574,9 +523,6 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
   if (font == NULL) {
     fprintf (stderr, "Impossibile caricare il font.\n");
   }
-
-  SDL_JoystickEventState(SDL_ENABLE);
-  joystick = SDL_JoystickOpen(0);
 
   SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
   SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
@@ -675,50 +621,9 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
          eyeDist=eyeDist/0.9;
        };
      break;
-
-     case SDL_JOYAXISMOTION: /* Handle Joystick Motion */
-        if( e.jaxis.axis == 0)
-         {
-            if ( e.jaxis.value < -3200  )
-             {
-              drone.controller.Joy(0 , true);
-              drone.controller.Joy(1 , false);
-//	      printf("%d <-3200 \n",e.jaxis.value);
-             }
-            if ( e.jaxis.value > 3200  )
-            {
-              drone.controller.Joy(0 , false);
-              drone.controller.Joy(1 , true);
-//	      printf("%d >3200 \n",e.jaxis.value);
-            }
-            if ( e.jaxis.value >= -3200 && e.jaxis.value <= 3200 )
-             {
-              drone.controller.Joy(0 , false);
-              drone.controller.Joy(1 , false);
-//	      printf("%d in [-3200,3200] \n",e.jaxis.value);
-             }
-	    rendering(win, font);
-            //redraw();
-        }
-        break;
-      case SDL_JOYBUTTONDOWN: /* Handle Joystick Button Presses */
-        if ( e.jbutton.button == 0 )
-        {
-           drone.controller.Joy(2 , true);
-//	   printf("jbutton 0\n");
-        }
-        if ( e.jbutton.button == 2 )
-        {
-           drone.controller.Joy(3 , true);
-//	   printf("jbutton 2\n");
-        }
-        break;
-      case SDL_JOYBUTTONUP: /* Handle Joystick Button Presses */
-           drone.controller.Joy(2 , false);
-           drone.controller.Joy(3 , false);
-        break;
-     }
-    } else {
+    }
+  }
+    else {
       // nessun evento: siamo IDLE
 
       Uint32 timeNow=SDL_GetTicks(); // che ore sono?
@@ -759,9 +664,6 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
             switch (e.type) {
               case SDL_KEYDOWN:
               if (e.key.keysym.sym==SDLK_ESCAPE) done1 = 1;
-                break;
-              case SDL_JOYBUTTONDOWN:
-                done1 = 1;
                 break;
               case SDL_WINDOWEVENT:
                 windowID = SDL_GetWindowID(win);
