@@ -38,8 +38,11 @@ void SetupEnvmapTexture()
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_TEXTURE_GEN_S); // abilito la generazione automatica delle coord texture S e T (proiettata su oggetto tramite sfera)
   glEnable(GL_TEXTURE_GEN_T);
-  glTexGeni(GL_S, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP); // Env map
-  glTexGeni(GL_T, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP);
+  //glTexGeni(GL_S, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP); // Env map
+  //glTexGeni(GL_T, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP);
+  glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+
   glColor3f(1,1,1); // metto il colore neutro (viene moltiplicato col colore texture, componente per componente)
   glDisable(GL_LIGHTING); // disabilito il lighting OpenGL standard (lo faccio con la texture)
 }

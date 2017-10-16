@@ -91,7 +91,10 @@ già lungo il perimetro della sfera.
 </li>
 La scena viene illuminata da una luce dichiarata nel main come GL_LIGHT0, definita nel metodo rendering. Questa è una luce puntiforme, a posizione fissata, direzionale.
 Si sono mantenuti come nel progetto car i parametri di luce diffusa, ovvero quello che crea un effetto 3D, e quello di luce speculare, che crea un effetto di luccichio.
-Inoltre sono stati effettuati dei test utilizzando un'altra luce, con parametri GL_FLAT e GL_SMOOTH, anche se i risultati non sono stati sufficientemente notevoli da meritare di essere riportati graficamente nella relazione.
+Inoltre sono stati effettuati dei test utilizzando un'altra luce, con parametri GL_FLAT e GL_SMOOTH, anche se i risultati non sono stati sufficientemente notevoli, probabilmente a causa del tipo di modelli poligonali riprodotti, da meritare di essere riportati graficamente nella relazione.
+Per fare queste prove è stata usata un'altra luce, stavolta di tipo posizionale, con raggi di luce che escono in tutte le direzioni.
+E' stata poi "spenta" la luce, per vedere lo scenario di gioco senza illuminazione, è stato possibile osservare anche le superfici texturizzate al buio grazie all'opzione di texture combining GL_MODULATE.
+<img height="50%" src="./images/nolight.png"/>
 <li>
 <b>Ombra</b><br/>
 </li>

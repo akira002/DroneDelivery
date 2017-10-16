@@ -369,13 +369,13 @@ void rendering(SDL_Window *win, TTF_Font *font){
   glLightfv(GL_LIGHT0, GL_POSITION, tmpv );
 
   // the ambient RGBA intensity of the light
-  //float tmpp[4] = {2,2,2,  1};
-  //glLightfv(GL_LIGHT0, GL_AMBIENT, tmpp);
+  float tmpp[4] = {3,3,3,  1};
+  //glLightfv(GL_LIGHT1, GL_AMBIENT, tmpp);
 
   // GL_FLAT è il default: ogni poligono ha un colore
   // GL_SMOOTH: ogni punto della superficie del poligono ha un'ombreggiatura derivata
   //            dall'interpolazione delle normali ai vertici
-  //glShadeModel(GL_FLAT);
+  glShadeModel(GL_FLAT);
 
 
 
@@ -536,6 +536,7 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
+  //glEnable(GL_LIGHT1);
   glEnable(GL_NORMALIZE); // opengl, per favore, rinormalizza le normali
                           // prima di usarle
   //glEnable(GL_CULL_FACE);
