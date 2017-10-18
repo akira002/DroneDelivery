@@ -34,46 +34,24 @@ void SetupEnvmapTexture()
 {
   // facciamo binding con la texture 0
   glBindTexture(GL_TEXTURE_2D,0);
-
+  //Le immagini in questa texture sono tutte 2-dimensionali. Hanno altezza e larghezza, ma non profondità.
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_TEXTURE_GEN_S); // abilito la generazione automatica delle coord texture S e T (proiettata su oggetto tramite sfera)
   glEnable(GL_TEXTURE_GEN_T);
-  //glTexGeni(GL_S, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP); // Env map
-  //glTexGeni(GL_T, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP);
-  glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  glTexGeni(GL_S, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP); // Env map
+  glTexGeni(GL_T, GL_TEXTURE_GEN_MODE , GL_SPHERE_MAP);
+  //glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 
   glColor3f(1,1,1); // metto il colore neutro (viene moltiplicato col colore texture, componente per componente)
   glDisable(GL_LIGHTING); // disabilito il lighting OpenGL standard (lo faccio con la texture)
 }
 
-// funzione che prepara tutto per creare le coordinate texture (s,t) da (x,y,z)
-// Mappo l'intervallo [ minY , maxY ] nell'intervallo delle T [0..1]
-//     e l'intervallo [ minZ , maxZ ] nell'intervallo delle S [0..1]
-/*void SetupWheelTexture(Point3 min, Point3 max){
-  glBindTexture(GL_TEXTURE_2D,0);
-  glEnable(GL_TEXTURE_2D);
-  glEnable(GL_TEXTURE_GEN_S);
-  glEnable(GL_TEXTURE_GEN_T);
-
-  // ulilizzo le coordinate OGGETTO
-  // cioe' le coordnate originali, PRIMA della moltiplicazione per la ModelView
-  // in modo che la texture sia "attaccata" all'oggetto, e non "proiettata" su esso
-  glTexGeni(GL_S, GL_TEXTURE_GEN_MODE , GL_OBJECT_LINEAR);
-  glTexGeni(GL_T, GL_TEXTURE_GEN_MODE , GL_OBJECT_LINEAR);
-  float sz=1.0/(max.Z() - min.Z());
-  float ty=1.0/(max.Y() - min.Y());
-  float s[4]={0,0,sz,  - min.Z()*sz };
-  float t[4]={0,ty,0,  - min.Y()*ty };
-  glTexGenfv(GL_S, GL_OBJECT_PLANE, s);
-  glTexGenfv(GL_T, GL_OBJECT_PLANE, t);
-}*/
-
 // DoStep: facciamo un passo di fisica (a delta_t costante)
 //
 // Indipendente dal rendering.
 //
-// ricordiamoci che possiamo LEGGERE ma mai SCRIVERE
+// ricordiamoci che possiamo LEGGERE ma mai SCRIVERE (si usa EatKey)
 // la struttura controller da DoStep
 void Drone::DoStep(){
   // computiamo l'evolversi della macchina
@@ -104,16 +82,16 @@ void Drone::DoStep(){
   if (py < 0) py = 0; // il drone non può andare sottoterra
 
 
-  // attirti (semplificando)
+  // attriti (semplificando)
   vxm*=attritoX;
   vym*=attritoY;
   vzm*=attritoZ;
 
-  // l'orientamento della macchina segue quello dello sterzo
+  // l'orientamento del drone segue quello dello sterzo
   // (a seconda della velocita' sulla z)
   facing = facing - (vzm*grip)*sterzo;
 
-  // rotazione mozzo ruote (a seconda della velocita' sulla z)
+  // rotazione mozzo ruote (costante)
   float da ; //delta angolo
   da = 9;
   mozzo+=da;
@@ -139,8 +117,6 @@ void Drone::DoStep(){
   if (py <= 12 && pz<=3 && pz >= 0) pz = 3;
   if (py <= 12 && pz>=-3 && pz <= 0) pz = -3;
 }
-
-//void drawCube(); // questa e' definita altrove (quick hack)
 
 void Controller::Init(){
   for (int i=0; i<NKEYS; i++) key[i]=false;
@@ -188,7 +164,6 @@ void Drone::RenderAllParts(bool usecolor) const {
 
   // disegna lo chassis con una mesh
   glPushMatrix();
-  //glScalef(-0.05,0.05,-0.05); // patch: riscaliamo la mesh di 1/10
   if (!useEnvmap)
   {
     if (usecolor) glColor3f(1,0,0);     // colore rosso, da usare con Lighting
@@ -196,7 +171,7 @@ void Drone::RenderAllParts(bool usecolor) const {
   else {
     if (usecolor) SetupEnvmapTexture();
   }
-  droneChassis.RenderNxV(); // rendering delle mesh dronelinga usando normali per vertice
+  droneChassis.RenderNxV(); // rendering delle mesh drone usando normali per vertice
   if (usecolor) glEnable(GL_LIGHTING);
 
   //disabilito la texture per le eliche

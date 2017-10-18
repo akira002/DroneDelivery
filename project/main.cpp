@@ -25,7 +25,7 @@ bool useColors=false;
 bool useShadow=true;
 int cameraType=0;
 
-Drone drone; // la nostra macchina
+Drone drone; // il nostro drone
 int nstep=0; // numero di passi di FISICA fatti fin'ora
 const int PHYS_SAMPLING_STEP=10; // numero di millisec che un passo di fisica simula
 
@@ -43,9 +43,8 @@ int punteggio = 0; // punteggio del giocatore
 extern int pos_x;
 extern int pos_z;
 
-//qualita del testo scritto e id della realtiva texture
-enum textquality {solid, shaded, blended};
-uint font_id = -1;
+enum textquality {solid, shaded, blended}; //qualita del testo scritto
+uint font_id = -1; //id della realtiva texture
 
 //Funzione per stampare a schermo del testo
 void SDL_GL_DrawText(TTF_Font *font,char fgR, char fgG, char fgB, char fgA,
@@ -53,7 +52,7 @@ void SDL_GL_DrawText(TTF_Font *font,char fgR, char fgG, char fgB, char fgA,
 	                    enum textquality quality)
 {
 	SDL_Color tmpfontcolor = {fgR,fgG,fgB,fgA};
-	SDL_Color tmpfontbgcolor = {bgR, bgG, bgB, bgA};\
+	SDL_Color tmpfontbgcolor = {bgR, bgG, bgB, bgA};
 	SDL_Surface *initial;
 	SDL_Surface *intermediary;
 	SDL_Rect location;
@@ -82,11 +81,18 @@ void SDL_GL_DrawText(TTF_Font *font,char fgR, char fgG, char fgB, char fgA,
 
 /* Diciamo a GL della nuova texture */
 	glBindTexture(GL_TEXTURE_2D, font_id);
+  //(	GLenum target,GLint level,GLint internalFormat,GLsizei width,GLsizei height,GLint border,GLenum format,GLenum type,	const GLvoid * data);
 	glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0, GL_RGBA,
 			GL_UNSIGNED_BYTE, intermediary->pixels );
 
 
 /* GL_NEAREST looks horrible, if scaled... */
+  //texture: Specifies the texture object name for glTextureParameter functions.
+  //pname: Specifies the symbolic name of a single-valued texture parameter
+  //param: For the scalar commands, specifies the value of pname.
+
+  //The texture minifying (magnifying) function is used whenever the level-of-detail function
+  // used when sampling from the texture determines that the texture should be minified (magnified)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -132,6 +138,7 @@ void SDL_GL_DrawText(TTF_Font *font,char fgR, char fgG, char fgB, char fgA,
 
 /* Clean up */
 	glDisable(GL_TEXTURE_2D);
+  //Use this function to free an RGB surface.
 	SDL_FreeSurface(initial);
 	SDL_FreeSurface(intermediary);
 //	glColor3f(0.0f, 0.0f, 0.0f);
@@ -139,13 +146,17 @@ void SDL_GL_DrawText(TTF_Font *font,char fgR, char fgG, char fgB, char fgA,
 
 // setta le matrici di trasformazione in modo
 // che le coordinate in spazio oggetto siano le coord
-// del pixel sullo schemo
+// del pixel sullo schemo (serve per disegnare in 2D sopra scena)
 void  SetCoordToPixel(){
+  //specifica quale matrice è la matrice corrente
   glMatrixMode(GL_PROJECTION);
+  //sostituisce la matrice corrente con la matrice identità
   glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+  //moltiplica matrice corrente per matrice di traslazione
   glTranslatef(-1,-1,0);
+  //moltiplica matrice corrente per matrice di scala
   glScalef(2.0/scrW, 2.0/scrH, 1);
 }
 
@@ -154,6 +165,8 @@ bool LoadTexture(int textbind,char *filename){
   if (!s) return false;
 
   glBindTexture(GL_TEXTURE_2D, textbind);
+  //MIP map è una raccolta ottimizzata di immagini bitmap precalcolate associate ad una texture principale
+  //(ogni bitmap versione più piccola texture principale) -> aumenta velocita rendering, meno artefatti, più richiesta memoria
   gluBuild2DMipmaps(
     GL_TEXTURE_2D,
     GL_RGB,
@@ -166,6 +179,7 @@ bool LoadTexture(int textbind,char *filename){
   GL_TEXTURE_2D,
   GL_TEXTURE_MAG_FILTER,
   GL_LINEAR );
+  //texture minifying function con uso di mipmap
   glTexParameteri(
   GL_TEXTURE_2D,
   GL_TEXTURE_MIN_FILTER,
@@ -228,6 +242,9 @@ void setCamera(){
                 cx = px - camd*sinf;
                 cy = py + camh;
                 cz = pz - camd*cosf;
+                //definisce una trasformazione di vista (specifico posizione camera con posizione e orientamento, invece di sequenza rotate translate)
+                //sposta la telecamera nel punto di osservazione della scena,considera 2 come centro della scena verso il quale è rivolto lo sguardo,
+                // e 3 è il vettore che determina l’alto della camera
                 gluLookAt(ex,ey,ez,cx,cy,cz,0.0,1.0,0.0);
                 break;
         case CAMERA_TOP_FIXED:
@@ -277,11 +294,13 @@ printf("%f %f %f\n",viewAlpha,viewBeta,eyeDist);
 //funzione che disegna una mappa 2D della scena
 void drawMap(int scrH, int scrW) {
   /* calcolo delle coordinate reali dell'oggetto su mappa */
+  //posizione del drone sulla mappa
   float map_posx;
   float map_posz;
   map_posx = ((50*drone.px)/71) + 50 + 20;
   map_posz = ((50*drone.pz)/71) + 50 + scrH-20-100;
 
+  //posizione della scatola sulla mappa
   float map_cubex;
   float map_cubez;
   map_cubex = ((50*pos_x)/71) + 50 + 20;
@@ -292,7 +311,7 @@ void drawMap(int scrH, int scrW) {
 
   glColor3ub(210,210,210);
   glBegin(GL_POLYGON);
-    glVertex2d(20,scrH -20 -100);
+    glVertex2d(20,scrH -20 -100); //punto in basso a sx
     glVertex2d(20,scrH -20);
     glVertex2d(120,scrH -20);
     glVertex2d(120,scrH-20-100);
@@ -347,18 +366,22 @@ void rendering(SDL_Window *win, TTF_Font *font){
 
 
   // settiamo la matrice di proiezione
+  //matrice di proiezione, definisce le proprietà della camera che vede gli oggetti nel frame di coordinate del nostro mondo. Tipicamente: fattore zoom, aspect ratio, piani di clipping
+  //Tipicamente settata una volta, poi si usano le matrici di modellazione
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
-  gluPerspective( 70, //fovy,
+  //definisce una matrice di proiezione prospettica
+  gluPerspective( 70, //fovy, (field of view, in gradi, nella direzione y)
 		((float)scrW) / scrH,//aspect Y/X,
 		0.2,//distanza del NEAR CLIPPING PLANE in coordinate vista
 		1000  //distanza del FAR CLIPPING PLANE in coordinate vista
   );
 
+  //matrice modelview (modellazione) definisce come gli oggetti sono trasformati (tralati, ruotati e scalati) nel frame di coordinate del nostro scenario
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
 
-  // riempe tutto lo screen buffer di pixel color sfondo
+  // riempe tutto lo screen buffer di pixel color sfondo, perché fa un clear dei buffer al valore presettato
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
   //drawAxis(); // disegna assi frame VISTA
@@ -369,29 +392,26 @@ void rendering(SDL_Window *win, TTF_Font *font){
   glLightfv(GL_LIGHT0, GL_POSITION, tmpv );
 
   // the ambient RGBA intensity of the light
-  float tmpp[4] = {3,3,3,  1};
+  //float tmpp[4] = {3,3,3,  1};
   //glLightfv(GL_LIGHT1, GL_AMBIENT, tmpp);
 
   // GL_FLAT è il default: ogni poligono ha un colore
   // GL_SMOOTH: ogni punto della superficie del poligono ha un'ombreggiatura derivata
   //            dall'interpolazione delle normali ai vertici
-  glShadeModel(GL_FLAT);
+  //glShadeModel(GL_FLAT);
 
-
-
-  // settiamo matrice di vista
-  //glTranslatef(0,0,-eyeDist);
-  //glRotatef(viewBeta,  1,0,0);
-  //glRotatef(viewAlpha, 0,1,0);
   setCamera();
 
 
   //drawAxis(); // disegna assi frame MONDO
 
   static float tmpcol[4] = {1,1,1,  1};
+  //specificano i parametri riguardanti i materiali, per il modello di illuminazione
   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, tmpcol);
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 127);
 
+  //Se abilitato (e non c'è attivo vertex shader), usa i parametri di illuminazione correnti per computare i colori o gli indici dei vertici.
+  //Altrimenti associa semplicemente il colore corrente ad ogni vertice.
   glEnable(GL_LIGHTING);
 
   // settiamo matrice di modellazione
@@ -406,7 +426,7 @@ void rendering(SDL_Window *win, TTF_Font *font){
   drawManifest(35, 0, -12);
   drawManifest(-12, 0, 12);
 
-  drone.Render(); // disegna la macchina
+  drone.Render(); // disegna il drone
 
   // disegna la scatola bersaglio
   drawCube(drone);
@@ -444,11 +464,11 @@ void rendering(SDL_Window *win, TTF_Font *font){
   sprintf(str, "%u", actualTime);
   char text2[] = "Tempo: ";
   SDL_GL_DrawText(font, 0, 0, 0, 0, 210, 210, 210, 255, strcat(text2, str), scrW-320, scrH-75, shaded);
-
+  //se abilitato, fa confronti di profondità ed aggiorna il buffer di profondità
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
 
-
+  //non ritorna finchè tutti gli effetti dei comandi GL chiamati in precedenza non sono completati
   glFinish();
   // ho finito: buffer di lavoro diventa visibile
   SDL_GL_SwapWindow(win);
@@ -525,6 +545,8 @@ static int keymap[Controller::NKEYS] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_UP,
   }
 
   SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
+  //si attiva il double buffer (si inizializza il color buffer, si rende la scena, si scambiano front e back buffer con la swap)
+  //Tecnica per nascondere il frame buffer mentre viene riempito
   SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
   // facciamo una finestra di scrW x scrH pixels

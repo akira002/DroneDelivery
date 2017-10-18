@@ -22,10 +22,12 @@ void drawFloor()
     // disegno il terreno ripetendo una texture su di esso
     glBindTexture(GL_TEXTURE_2D, 5);
     glEnable(GL_TEXTURE_2D);
+    //disabilito la generazione automatica delle coord texture S e T
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
-    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
-    //glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    //setto i parametri del texture environment
+    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE ); //tells the renderer to skip the current color and just use the texel colors
+    //glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); //then if you make a call to glColorx() your textures will be filtered to that color too
   }
 
   // disegna KxK quads
@@ -56,8 +58,8 @@ void drawMuro () {
         glColor3f(0.1,0.1,.1);
         glScalef(3.8, 1.0, 0.75);
         glTranslatef(0,0,0);
-        //muro.RenderNxV();
-        muro.RenderNxF();
+        //muro.RenderNxV(); //render normali per vertice (gouraud shading)
+        muro.RenderNxF(); //render normali per faccia (flat shading)
         glPopMatrix();
 }
 
@@ -153,7 +155,6 @@ void drawCube(Drone drone) {
       } while (!(pos_z<-3)); //quelle di denaro devono sempre stare dall'altro
     }
     mustCreateNewCube = false;
-    //printf("COORD1: %d %d %d\n", pos_x, pos_y, pos_z);
   }
 
   // disegno del cubo con una texture personale su tutti e sei i lati
